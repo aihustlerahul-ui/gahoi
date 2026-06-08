@@ -1,0 +1,7 @@
+{
+  "enabledPlugins": {
+    "expo-app-design@expo-plugins": true,
+    "react-native-best-practices@callstack-agent-skills": true,
+    "skills@swmansion": true
+  }
+}

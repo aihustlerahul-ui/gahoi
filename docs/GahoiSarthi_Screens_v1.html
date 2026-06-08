@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gahoi Sarthi — All 9 Screens</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1A0800; font-family: Arial, sans-serif; padding: 40px 20px; }
+  h1 { color: #E8B84B; text-align: center; font-size: 28px; margin-bottom: 8px; letter-spacing: 1px; }
+  .subtitle { color: #8A7A60; text-align: center; font-size: 14px; margin-bottom: 40px; }
+
+  .section-title { color: #B5620E; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid #3D2E1A; }
+
+  .row { display: flex; gap: 24px; flex-wrap: wrap; justify-content: flex-start; margin-bottom: 40px; }
+
+  /* Phone shell */
+  .phone { width: 220px; flex-shrink: 0; }
+  .phone-label { color: #E8B84B; font-size: 11px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; margin-bottom: 8px; text-align: center; }
+  .phone-shell { width: 220px; background: #111; border-radius: 36px; padding: 12px;
+    border: 2px solid #333; }
+  .notch { height: 22px; background: #000; border-radius: 12px; display: flex;
+    align-items: center; justify-content: center; margin-bottom: 6px; }
+  .notch-dot { width: 6px; height: 6px; border-radius: 50%; background: #333; }
+  .screen { width: 196px; border-radius: 10px; overflow: hidden; background: #FDFAF5; min-height: 400px; }
+  .home-bar { height: 16px; background: #FDFAF5; border-radius: 0 0 10px 10px;
+    display: flex; align-items: center; justify-content: center; }
+  .home-pill { width: 48px; height: 4px; background: #333; border-radius: 2px; }
+
+  /* Design tokens */
+  :root {
+    --gold: #B5620E; --gold-dark: #7B5E2A; --gold-light: #FDF3E0;
+    --ivory: #FDFAF5; --dark: #3D2E1A; --mid: #8A7A60;
+    --border: #E8E0D0; --accent: #E8B84B;
+    --green: #1A7A45; --red: #C0392B; --purple: #7B2D8B;
+  }
+
+  /* Status bar */
+  .sbar { display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 10px; background: #FDFAF5; }
+  .sbar-time { font-size: 10px; font-weight: 600; color: #3D2E1A; }
+  .sbar-icons { display: flex; gap: 2px; }
+  .sbar-dot { width: 4px; height: 4px; border-radius: 50%; background: #B5620E; }
+
+  /* Bottom nav */
+  .bnav { display: flex; justify-content: space-around; align-items: flex-end;
+    padding: 6px 4px 4px; background: #fff; border-top: .5px solid #E8E0D0; }
+  .bni { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .bni-icon { font-size: 14px; line-height: 1; }
+  .bni-label { font-size: 7px; color: #8A7A60; }
+  .bni.active .bni-label { color: #B5620E; }
+  .bni-fab { width: 34px; height: 34px; border-radius: 50%; background: #B5620E;
+    display: flex; align-items: center; justify-content: center; margin-top: -10px;
+    border: 3px solid #FDFAF5; }
+  .bni-fab .bni-icon { font-size: 16px; color: #fff; }
+
+  /* Common components */
+  .header { display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 10px; background: #FDFAF5; }
+  .hdr-title { font-size: 13px; font-weight: 600; color: #3D2E1A; }
+  .hdr-sub { font-size: 9px; color: #8A7A60; }
+  .hdr-icons { display: flex; gap: 5px; }
+  .hdr-btn { width: 26px; height: 26px; border-radius: 50%; background: #FDF3E0;
+    border: .5px solid #E8B84B; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; }
+
+  .card { background: #fff; border-radius: 12px; border: .5px solid #E8E0D0; overflow: hidden; margin: 0 8px 7px; }
+  .pill { display: inline-flex; align-items: center; gap: 2px; padding: 2px 6px;
+    border-radius: 20px; font-size: 8px; font-weight: 600; }
+  .pill-gold { background: #B5620E; color: #fff; }
+  .pill-inactive { background: #F5F0E8; color: #5C3A1A; border: .5px solid #E8E0D0; }
+  .pill-green { background: #1A7A45; color: #fff; }
+  .pill-purple { background: #7B2D8B; color: #fff; }
+
+  .gold-btn { background: #B5620E; color: #fff; border: none; border-radius: 8px;
+    padding: 6px 10px; font-size: 10px; font-weight: 600; width: 100%; text-align: center; }
+  .outline-btn { background: #fff; color: #3D2E1A; border: .5px solid #E8E0D0;
+    border-radius: 8px; padding: 6px 10px; font-size: 10px; width: 100%; text-align: center; }
+  .red-btn { background: #FEF0F0; color: #C0392B; border: .5px solid #F0A0A0;
+    border-radius: 8px; padding: 7px 10px; font-size: 10px; font-weight: 600;
+    width: 100%; text-align: center; margin: 6px 0; }
+
+  .field-row { padding: 5px 0; border-bottom: .5px solid #F5EFE0; }
+  .field-label { font-size: 8px; color: #8A7A60; text-transform: uppercase; letter-spacing: .04em; }
+  .field-value { font-size: 11px; color: #3D2E1A; font-weight: 500; margin-top: 1px; }
+
+  .section-row { font-size: 9px; font-weight: 600; color: #B5620E; text-transform: uppercase;
+    letter-spacing: .06em; padding: 6px 12px 3px; margin-top: 4px; }
+
+  .settings-row { display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border-bottom: .5px solid #F5EFE0; }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-size: 11px; color: #3D2E1A; }
+  .settings-sub { font-size: 9px; color: #8A7A60; }
+  .tog { width: 26px; height: 14px; border-radius: 7px; position: relative; flex-shrink: 0; }
+  .tog-on { background: #B5620E; }
+  .tog-off { background: #E8E0D0; }
+  .tog-thumb { position: absolute; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: #fff; }
+
+  .interest-card { display: flex; gap: 7px; padding: 7px 8px; border-bottom: .5px solid #F5EFE0; align-items: flex-start; }
+  .ic-photo { width: 44px; height: 52px; border-radius: 8px; background: #F5D89A;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .ic-info { flex: 1; }
+  .ic-name { font-size: 11px; font-weight: 600; color: #3D2E1A; }
+  .ic-meta { font-size: 9px; color: #8A7A60; margin-top: 1px; }
+
+  .tab-bar { display: flex; border-bottom: .5px solid #E8E0D0; background: #FDFAF5; }
+  .tab { flex: 1; text-align: center; padding: 6px 2px; font-size: 9px; color: #8A7A60; border-bottom: 2px solid transparent; }
+  .tab.active { color: #B5620E; border-bottom-color: #B5620E; font-weight: 600; }
+
+  .match-card-photo { position: relative; height: 110px; background: linear-gradient(180deg,#F5D89A 0%,#E8C87A 100%);
+    display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  .mc-overlay { position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(61,46,26,.7)); padding: 4px 6px; }
+  .mc-id { font-size: 8px; color: rgba(255,255,255,.8); }
+  .mc-name { font-size: 11px; font-weight: 600; color: #fff; }
+  .mc-pills { position: absolute; bottom: 28px; left: 5px; display: flex; gap: 3px; }
+  .mc-verified { position: absolute; top: 5px; right: 5px; }
+  .mc-share { position: absolute; bottom: 5px; right: 5px; width: 18px; height: 18px;
+    border-radius: 50%; background: rgba(255,255,255,.85); display: flex; align-items: center; justify-content: center; font-size: 9px; }
+  .mc-body { padding: 6px 8px 8px; }
+  .mc-meta { font-size: 9px; color: #8A7A60; margin-bottom: 5px; }
+  .mc-actions { display: flex; gap: 4px; }
+  .mc-shortlist { width: 24px; height: 24px; border-radius: 7px; border: .5px solid #E8E0D0;
+    display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+
+  .pills-row { display: flex; gap: 4px; overflow: hidden; padding: 6px 8px; }
+
+  .top-pick { background: #FDF9F0; border: .5px solid #E8B84B; border-radius: 9px;
+    padding: 7px 9px; margin: 0 8px 7px; }
+  .tp-label { font-size: 9px; font-weight: 600; color: #8A4408; margin-bottom: 4px; }
+  .tp-body { display: flex; align-items: center; gap: 6px; }
+  .tp-avatar { width: 32px; height: 32px; border-radius: 8px; background: #F5D89A;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .tp-info { flex: 1; }
+  .tp-name { font-size: 10px; font-weight: 600; color: #3D2E1A; }
+  .tp-sub { font-size: 9px; color: #8A7A60; }
+  .tp-btn { background: #B5620E; color: #fff; border-radius: 7px; padding: 4px 7px; font-size: 9px; font-weight: 600; flex-shrink: 0; }
+
+  /* Splash */
+  .splash-screen { background: #1A0800; min-height: 400px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px; padding: 20px; }
+  .mandala { width: 80px; height: 80px; border-radius: 50%; border: 2px solid rgba(181,98,14,.4);
+    display: flex; align-items: center; justify-content: center; position: relative; }
+  .mandala-inner { width: 50px; height: 50px; border-radius: 50%; border: 1.5px solid rgba(232,184,75,.5); }
+  .mandala-dot { width: 8px; height: 8px; border-radius: 50%; background: #E8B84B; position: absolute; }
+  .splash-title { font-size: 22px; font-weight: 700; color: #E8B84B; font-family: Georgia, serif; }
+  .splash-hindi { font-size: 14px; color: #D4BFA0; }
+  .splash-tag { font-size: 9px; color: #8A7A60; font-style: italic; text-align: center; }
+
+  /* OTP boxes */
+  .otp-row { display: flex; gap: 4px; justify-content: center; padding: 8px 0; }
+  .otp-box { width: 26px; height: 32px; border: 1.5px solid #B5620E; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #3D2E1A; background: #FDFAF5; }
+  .otp-empty { border-color: #E8E0D0; }
+
+  /* Wizard steps */
+  .wizard-progress { display: flex; gap: 4px; padding: 6px 10px; background: #FDFAF5; }
+  .wp-step { flex: 1; height: 3px; border-radius: 2px; background: #E8E0D0; }
+  .wp-step.done { background: #B5620E; }
+  .wp-step.active { background: #E8B84B; }
+
+  .form-group { padding: 5px 10px; }
+  .form-label { font-size: 9px; color: #8A7A60; margin-bottom: 2px; }
+  .form-input { background: #fff; border: .5px solid #E8E0D0; border-radius: 8px;
+    padding: 5px 8px; font-size: 10px; color: #3D2E1A; width: 100%; }
+  .chip-row { display: flex; gap: 4px; flex-wrap: wrap; padding: 4px 10px; }
+  .chip { padding: 3px 8px; border-radius: 20px; font-size: 9px; font-weight: 500;
+    background: #F5F0E8; color: #5C3A1A; border: .5px solid #E8E0D0; }
+  .chip.active { background: #B5620E; color: #fff; border-color: #B5620E; }
+
+  /* Profile own */
+  .own-photo { height: 130px; background: linear-gradient(180deg,#F5D89A,#D4A060); position: relative;
+    display: flex; align-items: center; justify-content: center; font-size: 50px; }
+  .own-photo-overlay { position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent,rgba(61,46,26,.6)); padding: 6px 10px; }
+  .own-pid { font-size: 8px; color: rgba(255,255,255,.8); }
+  .own-cam { position: absolute; bottom: 8px; right: 8px; width: 22px; height: 22px;
+    border-radius: 50%; background: rgba(255,255,255,.9); display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .stat-card { background: #FDF9F0; border: .5px solid #E8B84B; border-radius: 10px;
+    margin: 0 8px 6px; padding: 6px 8px; }
+  .stat-label { font-size: 9px; font-weight: 600; color: #8A4408; margin-bottom: 5px; }
+  .stat-row { display: flex; gap: 5px; }
+  .stat-item { flex: 1; text-align: center; background: #F5EDE0; border-radius: 8px; padding: 5px 2px; }
+  .stat-num { font-size: 14px; font-weight: 700; color: #E8B84B; }
+  .stat-sub { font-size: 7px; color: #8A5C30; }
+
+  /* Drawer */
+  .drawer-overlay { display: flex; min-height: 400px; }
+  .drawer-scrim { flex: 1; background: rgba(61,46,26,.35); }
+  .drawer-panel { width: 155px; background: #fff; border-left: .5px solid #E8E0D0; display: flex; flex-direction: column; }
+  .drawer-header { background: #3D2E1A; padding: 10px 10px 8px; }
+  .dh-avatar { width: 28px; height: 28px; border-radius: 50%; background: #F5D89A;
+    border: 1.5px solid #E8B84B; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .dh-name { font-size: 10px; font-weight: 600; color: #FDFAF5; }
+  .dh-sub { font-size: 8px; color: #B5620E; }
+  .dh-stats { display: flex; gap: 4px; margin-top: 5px; }
+  .dh-stat { flex: 1; background: #5C2D04; border-radius: 4px; text-align: center; padding: 3px 0; }
+  .dhs-num { font-size: 10px; font-weight: 700; color: #E8B84B; }
+  .dhs-label { font-size: 7px; color: #B5620E; }
+  .drawer-section { font-size: 8px; font-weight: 600; color: #B5620E; letter-spacing: .06em;
+    text-transform: uppercase; padding: 5px 10px 2px; margin-top: 2px; }
+  .drawer-item { display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+    border-bottom: .5px solid #F5EFE0; font-size: 10px; color: #3D2E1A; }
+  .di-icon { font-size: 11px; color: #B5620E; flex-shrink: 0; }
+  .di-icon.secondary { color: #8A7A60; }
+  .di-sub { font-size: 8px; color: #8A7A60; }
+
+  /* Settings section box */
+  .settings-box { background: #fff; border-radius: 10px; border: .5px solid #E8E0D0; overflow: hidden; margin: 0 8px 7px; }
+
+  /* Search */
+  .search-section { margin: 0 8px 7px; background: #fff; border: .5px solid #E8E0D0; border-radius: 10px; overflow: hidden; }
+  .search-section-title { font-size: 10px; font-weight: 600; color: #B5620E; padding: 6px 10px 4px; border-bottom: .5px solid #F5EFE0; }
+  .search-input { margin: 5px 8px; background: #FDFAF5; border: .5px solid #E8E0D0; border-radius: 8px;
+    padding: 5px 8px; font-size: 10px; color: #8A7A60; display: flex; justify-content: space-between; }
+  .search-btn { margin: 5px 8px 7px; background: #3D2E1A; color: #fff; border-radius: 8px;
+    padding: 6px 10px; font-size: 10px; font-weight: 600; text-align: center; }
+  .search-or { text-align: center; font-size: 9px; color: #8A7A60; margin: 3px 0; }
+
+  /* Accepted interest */
+  .accepted-card { border-left: 3px solid #1565A0; margin: 0 8px 5px; background: #fff;
+    border-radius: 0 10px 10px 0; border: .5px solid #E8E0D0; overflow: hidden; }
+  .ac-banner { background: #1565A0; padding: 2px 8px; font-size: 8px; font-weight: 600; color: #fff; }
+</style>
+</head>
+<body>
+
+<h1>Gahoi Sarthi — गहोई सारथी</h1>
+<p class="subtitle">All 9 screens — Phase 1 MVP Design Reference</p>
+
+<!-- ══ ROW 1 ══ -->
+<div class="section-title">Screen 1 — Splash / Registration / OTP</div>
+<div class="row">
+
+  <!-- Splash -->
+  <div class="phone">
+    <div class="phone-label">1A · Splash</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="splash-screen">
+          <div class="mandala">
+            <div class="mandala-inner"></div>
+            <div class="mandala-dot" style="top:-4px;left:50%;transform:translateX(-50%)"></div>
+            <div class="mandala-dot" style="bottom:-4px;left:50%;transform:translateX(-50%)"></div>
+            <div class="mandala-dot" style="left:-4px;top:50%;transform:translateY(-50%)"></div>
+            <div class="mandala-dot" style="right:-4px;top:50%;transform:translateY(-50%)"></div>
+          </div>
+          <div class="splash-title">Gahoi Sarthi</div>
+          <div class="splash-hindi">गहोई सारथी</div>
+          <div class="splash-tag">Har Gahoi Parivar Ka<br>Bharosemand Sarthi</div>
+        </div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+  <!-- Registration -->
+  <div class="phone">
+    <div class="phone-label">1B · Registration</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div style="padding:12px 10px 0">
+          <div style="font-size:15px;font-weight:600;color:#3D2E1A;margin-bottom:2px">Create Account</div>
+          <div style="font-size:10px;color:#8A7A60;margin-bottom:12px">खाता बनाएं</div>
+          <div style="font-size:9px;color:#8A7A60;margin-bottom:4px">Email Address</div>
+          <div class="form-input" style="margin-bottom:10px;color:#8A7A60">Enter your email address</div>
+          <div style="font-size:9px;color:#8A7A60;margin-bottom:4px">Profile created by</div>
+          <div class="chip-row" style="padding:0;margin-bottom:10px">
+            <div class="chip active">Self</div>
+            <div class="chip">Parents</div>
+            <div class="chip">Sibling</div>
+            <div class="chip">Relative</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+            <div style="width:14px;height:14px;border-radius:3px;border:1.5px solid #B5620E;background:#FDF3E0;flex-shrink:0"></div>
+            <div style="font-size:9px;color:#8A7A60">I accept <span style="color:#B5620E">Terms of Service</span> and <span style="color:#B5620E">Privacy Policy</span></div>
+          </div>
+          <div class="gold-btn" style="margin-bottom:8px">Send OTP / ओटीपी भेजें</div>
+          <div style="display:flex;align-items:center;gap:6px;margin:8px 0">
+            <div style="flex:1;height:.5px;background:#E8E0D0"></div>
+            <div style="font-size:9px;color:#8A7A60">OR</div>
+            <div style="flex:1;height:.5px;background:#E8E0D0"></div>
+          </div>
+          <div style="background:#fff;border:.5px solid #E8E0D0;border-radius:8px;padding:7px 10px;display:flex;align-items:center;justify-content:center;gap:8px">
+            <span style="font-size:14px">G</span>
+            <span style="font-size:10px;color:#3D2E1A">Continue with Google</span>
+          </div>
+        </div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+  <!-- OTP -->
+  <div class="phone">
+    <div class="phone-label">1C · OTP Verification</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div style="padding:16px 10px 0">
+          <div style="font-size:15px;font-weight:600;color:#3D2E1A;margin-bottom:2px">Enter OTP</div>
+          <div style="font-size:9px;color:#8A7A60;margin-bottom:16px">We sent a 6-digit code to<br><span style="color:#B5620E">rahul@example.com</span></div>
+          <div class="otp-row">
+            <div class="otp-box">4</div>
+            <div class="otp-box">7</div>
+            <div class="otp-box">2</div>
+            <div class="otp-box otp-empty"></div>
+            <div class="otp-box otp-empty"></div>
+            <div class="otp-box otp-empty"></div>
+          </div>
+          <div style="text-align:center;font-size:9px;color:#8A7A60;margin:8px 0 16px">Resend OTP in <span style="color:#B5620E">0:38</span></div>
+          <div class="gold-btn">Verify OTP / ओटीपी सत्यापित करें</div>
+          <div style="text-align:center;font-size:9px;color:#8A7A60;margin-top:10px">← Change email</div>
+        </div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ ROW 2 — WIZARD ══ -->
+<div class="section-title">Screen 2 — Profile Creation Wizard (5 Steps)</div>
+<div class="row">
+
+  <!-- Step 1 -->
+  <div class="phone">
+    <div class="phone-label">2A · Step 1 — Personal</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div class="wizard-progress">
+          <div class="wp-step done"></div><div class="wp-step active"></div>
+          <div class="wp-step"></div><div class="wp-step"></div><div class="wp-step"></div>
+        </div>
+        <div style="padding:8px 10px 4px;font-size:12px;font-weight:600;color:#3D2E1A">Personal & Community</div>
+        <div style="padding:0 10px 4px;font-size:9px;color:#8A7A60">Step 1 of 5 · व्यक्तिगत जानकारी</div>
+        <div class="form-group"><div class="form-label">First Name / पहला नाम *</div><div class="form-input">Divyanshi</div></div>
+        <div class="form-group"><div class="form-label">Last Name / उपनाम *</div><div class="form-input">Baderiya</div></div>
+        <div class="form-group"><div class="form-label">Date of Birth / जन्मतिथि *</div><div class="form-input">15 March 2000</div></div>
+        <div style="padding:4px 10px 2px;font-size:9px;color:#8A7A60">Gender / लिंग *</div>
+        <div class="chip-row"><div class="chip">Male / लड़का</div><div class="chip active">Female / लड़की</div><div class="chip">Other</div></div>
+        <div class="form-group"><div class="form-label">Gotra / गोत्र</div><div class="form-input">Bijpuriya</div></div>
+        <div style="padding:4px 10px 2px;font-size:9px;color:#8A7A60">Manglik / मांगलिक</div>
+        <div class="chip-row">
+          <div class="chip active">Non-Manglik</div><div class="chip">Manglik</div><div class="chip">Don't Know</div>
+        </div>
+        <div style="padding:8px 10px"><div class="gold-btn">Next / अगला →</div></div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="phone">
+    <div class="phone-label">2B · Step 2 — Education</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div class="wizard-progress">
+          <div class="wp-step done"></div><div class="wp-step done"></div>
+          <div class="wp-step active"></div><div class="wp-step"></div><div class="wp-step"></div>
+        </div>
+        <div style="padding:8px 10px 4px;font-size:12px;font-weight:600;color:#3D2E1A">Education & Occupation</div>
+        <div style="padding:0 10px 4px;font-size:9px;color:#8A7A60">Step 2 of 5 · शिक्षा और व्यवसाय</div>
+        <div class="form-group"><div class="form-label">Degree / डिग्री</div><div class="form-input">B.Tech Computer Science</div></div>
+        <div class="form-group"><div class="form-label">Institute / संस्थान</div><div class="form-input">NIT Bhopal</div></div>
+        <div style="padding:4px 10px 2px;font-size:9px;color:#8A7A60">Occupation Type / पेशा</div>
+        <div class="chip-row">
+          <div class="chip active">Salaried</div><div class="chip">Business</div>
+          <div class="chip">Self-Employed</div><div class="chip">Student</div>
+        </div>
+        <div class="form-group"><div class="form-label">Profession / काम</div><div class="form-input">Software Engineer</div></div>
+        <div class="form-group"><div class="form-label">Company / कंपनी</div><div class="form-input">Infosys, Bangalore</div></div>
+        <div class="form-group"><div class="form-label">Annual Income / वार्षिक आय</div>
+          <div class="form-input" style="color:#8A7A60">Select income range ▾</div></div>
+        <div style="padding:8px 10px;display:flex;gap:6px">
+          <div class="outline-btn">← Back</div>
+          <div class="gold-btn">Next →</div>
+        </div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="phone">
+    <div class="phone-label">2C · Step 3 — Family</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div class="wizard-progress">
+          <div class="wp-step done"></div><div class="wp-step done"></div>
+          <div class="wp-step done"></div><div class="wp-step active"></div><div class="wp-step"></div>
+        </div>
+        <div style="padding:8px 10px 4px;font-size:12px;font-weight:600;color:#3D2E1A">Family Details</div>
+        <div style="padding:0 10px 4px;font-size:9px;color:#8A7A60">Step 3 of 5 · पारिवारिक विवरण</div>
+        <div class="form-group"><div class="form-label">Father's Name / पिता का नाम</div><div class="form-input">Umesh Baderiya</div></div>
+        <div class="form-group"><div class="form-label">Father's Occupation / पिता का व्यवसाय</div><div class="form-input">Business</div></div>
+        <div class="form-group"><div class="form-label">Father's Mobile / पिता का मोबाइल</div><div class="form-input">+91 98270 27044</div></div>
+        <div class="form-group"><div class="form-label">Mother's Name / माता का नाम</div><div class="form-input">Neelima Baderiya</div></div>
+        <div class="form-group"><div class="form-label">Mama Naam / मामा का नाम</div><div class="form-input">Neelesh Bijpuriya</div></div>
+        <div class="form-group"><div class="form-label">Mama ka Aakna / मामा का आकना</div><div class="form-input">Bijpuriya</div></div>
+        <div style="padding:4px 10px 2px;font-size:9px;color:#8A7A60">Family Type / परिवार का प्रकार</div>
+        <div class="chip-row"><div class="chip active">Joint</div><div class="chip">Nuclear</div><div class="chip">Extended</div></div>
+        <div style="padding:8px 10px;display:flex;gap:6px">
+          <div class="outline-btn">← Back</div>
+          <div class="gold-btn">Next →</div>
+        </div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="phone">
+    <div class="phone-label">2D · Step 4 — Preferences</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div class="wizard-progress">
+          <div class="wp-step done"></div><div class="wp-step done"></div>
+          <div class="wp-step done"></div><div class="wp-step done"></div><div class="wp-step active"></div>
+        </div>
+        <div style="padding:8px 10px 4px;font-size:12px;font-weight:600;color:#3D2E1A">Partner Preferences</div>
+        <div style="padding:0 10px 4px;font-size:9px;color:#8A7A60">Step 4 of 5 · साथी की पसंद</div>
+        <div class="form-group"><div class="form-label">Age Range / आयु सीमा</div>
+          <div style="display:flex;gap:6px">
+            <div class="form-input">24 yrs</div>
+            <div style="font-size:9px;color:#8A7A60;padding-top:5px">to</div>
+            <div class="form-input">32 yrs</div>
+          </div>
+        </div>
+        <div class="form-group"><div class="form-label">Height Range / ऊंचाई</div>
+          <div style="display:flex;gap:6px">
+            <div class="form-input">5'5"</div>
+            <div style="font-size:9px;color:#8A7A60;padding-top:5px">to</div>
+            <div class="form-input">6'2"</div>
+          </div>
+        </div>
+        <div style="padding:4px 10px 2px;font-size:9px;color:#8A7A60">Marital Status Accepted</div>
+        <div class="chip-row"><div class="chip active">Never Married</div><div class="chip">Divorced</div></div>
+        <div style="padding:4px 10px 2px;font-size:9px;color:#8A7A60">Manglik Preference</div>
+        <div class="chip-row"><div class="chip active">Any</div><div class="chip">Non-Manglik Only</div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#3D2E1A">Exclude Same Gotra</div>
+            <div style="font-size:8px;color:#8A7A60">गोत्र बहिष्करण (recommended)</div>
+          </div>
+          <div class="tog tog-on"><div class="tog-thumb" style="right:2px"></div></div>
+        </div>
+        <div style="padding:8px 10px;display:flex;gap:6px">
+          <div class="outline-btn">← Back</div>
+          <div class="gold-btn">Next →</div>
+        </div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div class="phone">
+    <div class="phone-label">2E · Step 5 — Photos</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div class="wizard-progress">
+          <div class="wp-step done"></div><div class="wp-step done"></div>
+          <div class="wp-step done"></div><div class="wp-step done"></div><div class="wp-step done"></div>
+        </div>
+        <div style="padding:8px 10px 2px;font-size:12px;font-weight:600;color:#3D2E1A">Upload Photos</div>
+        <div style="padding:0 10px 8px;font-size:9px;color:#8A7A60">Step 5 of 5 · फोटो · Max 10 photos</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:0 8px 8px">
+          <div style="aspect-ratio:1;background:#F5D89A;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid #E8B84B;position:relative">
+            🙍‍♀️
+            <div style="position:absolute;bottom:-2px;right:-2px;background:#1A7A45;color:#fff;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:8px">★</div>
+          </div>
+          <div style="aspect-ratio:1;background:#EDE0D0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">📷</div>
+          <div style="aspect-ratio:1;background:#F0E8D8;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px dashed #D4BFA0">
+            <span style="font-size:18px;color:#B5620E">+</span>
+          </div>
+        </div>
+        <div style="margin:0 8px 8px;background:#FDF3E0;border:.5px solid #E8B84B;border-radius:8px;padding:6px 8px">
+          <div style="font-size:9px;font-weight:600;color:#8A4408;margin-bottom:2px">Photo visibility</div>
+          <div class="chip-row" style="padding:0">
+            <div class="chip active" style="font-size:8px">Public</div>
+            <div class="chip" style="font-size:8px">Members only</div>
+            <div class="chip" style="font-size:8px">On Interest</div>
+          </div>
+        </div>
+        <div style="padding:0 8px;font-size:9px;color:#8A7A60;margin-bottom:8px">
+          ✓ JPEG/PNG/WebP · Max 5MB each · Admin reviews before publish
+        </div>
+        <div style="padding:0 8px"><div class="gold-btn">Submit for Review / समीक्षा के लिए भेजें</div></div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ ROW 3 — PROFILE DETAIL ══ -->
+<div class="section-title">Screen 3 — Profile Detail (Own + Other User)</div>
+<div class="row">
+
+  <!-- Own Profile -->
+  <div class="phone">
+    <div class="phone-label">3A · My Profile</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div style="padding:6px 10px 4px;display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:12px;font-weight:600;color:#3D2E1A">My Profile / मेरी प्रोफाइल</div>
+          <div style="font-size:9px;color:#B5620E">Profile Id – GS 24300</div></div>
+          <div style="display:flex;gap:5px"><div style="font-size:14px">📄</div><div style="font-size:14px">↗</div></div>
+        </div>
+        <div class="own-photo">🙍‍♀️
+          <div class="own-cam">📷</div>
+          <div class="own-photo-overlay">
+            <div class="own-pid">GS 24300</div>
+          </div>
+        </div>
+        <div style="padding:6px 10px 2px;font-size:13px;font-weight:600;color:#3D2E1A">Divyanshi Baderiya</div>
+        <div style="padding:0 10px 6px;font-size:10px;color:#8A7A60">26 yrs · 🇮🇳 Satna, MP</div>
+        <div class="stat-card">
+          <div class="stat-label">Profile statistics / प्रोफाइल आँकड़े</div>
+          <div class="stat-row">
+            <div class="stat-item"><div class="stat-num">547</div><div class="stat-sub">Profile Views</div></div>
+            <div class="stat-item"><div class="stat-num">8</div><div class="stat-sub">Interests Received</div></div>
+            <div class="stat-item"><div class="stat-num">3</div><div class="stat-sub">Shortlisted</div></div>
+          </div>
+        </div>
+        <div style="margin:0 8px 6px;background:#FDF3E0;border:.5px solid #E8B84B;border-radius:9px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:10px;font-weight:600;color:#5C2D04">Paid Plan · Active</div>
+          <div style="font-size:9px;color:#8A5C30">Expires 27 June 2026</div></div>
+          <div style="background:#B5620E;color:#fff;border-radius:6px;padding:3px 8px;font-size:9px;font-weight:600">Renew</div>
+        </div>
+        <div style="padding:4px 10px;font-size:10px;font-weight:600;color:#3D2E1A;display:flex;justify-content:space-between">
+          <span>All Photos / सभी फोटो</span><span style="font-size:12px">✏️</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:2px 8px 8px">
+          <div style="aspect-ratio:1;background:#F5D89A;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px">🙍‍♀️</div>
+          <div style="aspect-ratio:1;background:#E8D0B0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px">🌄</div>
+          <div style="aspect-ratio:1;background:#D4BFA0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px">🎓</div>
+        </div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+  <!-- Other Profile - Free -->
+  <div class="phone">
+    <div class="phone-label">3B · Other Profile (Free)</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div class="match-card-photo" style="height:120px">
+          👨‍💼
+          <div class="mc-pills"><span class="pill pill-inactive">Gol</span><span class="pill pill-inactive">Business</span></div>
+          <div class="mc-verified"><span class="pill pill-green">✓ Verified</span></div>
+          <div class="mc-overlay"><div class="mc-id">GS 24325</div><div class="mc-name">Rahul Gupta ✓</div></div>
+        </div>
+        <div style="padding:6px 10px 2px;font-size:10px;color:#8A7A60">29 yrs · 🇮🇳 Gwalior, MP</div>
+        <div style="padding:2px 10px;display:flex;gap:5px;flex-wrap:wrap">
+          <span class="pill pill-gold">32/36 Uttam ⭐</span>
+          <span class="pill pill-inactive">MBA</span>
+          <span class="pill pill-inactive">Business</span>
+        </div>
+        <div style="margin:6px 8px;padding:6px 8px;background:#F5F0E8;border-radius:8px;border:.5px solid #E8E0D0">
+          <div style="font-size:9px;font-weight:600;color:#8A4408;margin-bottom:4px">🔒 Upgrade to view contact details</div>
+          <div class="field-row"><div class="field-label">Mobile</div><div class="field-value" style="color:#8A7A60">🔒 Hidden — Upgrade to Paid</div></div>
+          <div class="field-row"><div class="field-label">Email</div><div class="field-value" style="color:#8A7A60">🔒 Hidden — Upgrade to Paid</div></div>
+          <div class="field-row" style="border:none"><div class="field-label">Address</div><div class="field-value">Gwalior, MP</div></div>
+        </div>
+        <div style="padding:0 8px;display:flex;gap:5px">
+          <div class="mc-shortlist">🔖</div>
+          <div class="gold-btn">Send Interest / रुचि भेजें</div>
+        </div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+  <!-- Other Profile - Paid Matched -->
+  <div class="phone">
+    <div class="phone-label">3C · Other Profile (Paid + Matched)</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div class="match-card-photo" style="height:120px">
+          👨‍💼
+          <div class="mc-pills"><span class="pill pill-inactive">Gol</span><span class="pill pill-inactive">Business</span></div>
+          <div class="mc-verified"><span class="pill pill-green">✓ Verified</span></div>
+          <div class="mc-overlay"><div class="mc-id">GS 24325</div><div class="mc-name">Rahul Gupta ✓</div></div>
+        </div>
+        <div style="padding:6px 10px 2px;font-size:10px;color:#8A7A60">29 yrs · 🇮🇳 Gwalior, MP</div>
+        <div style="margin:5px 8px;padding:7px 8px;background:#EAF3DE;border-radius:8px;border:.5px solid #1A7A45">
+          <div style="font-size:9px;font-weight:600;color:#1A7A45;margin-bottom:4px">✓ Mutual Interest Accepted — Contact Unlocked</div>
+          <div class="field-row"><div class="field-label">Mobile / WhatsApp</div><div class="field-value" style="color:#B5620E">+91 98270 27044 📞</div></div>
+          <div class="field-row"><div class="field-label">Email</div><div class="field-value" style="color:#B5620E">rahul@example.com</div></div>
+          <div class="field-row"><div class="field-label">Father's Name</div><div class="field-value">Ravi Gupta</div></div>
+          <div class="field-row"><div class="field-label">Father's Mobile</div><div class="field-value" style="color:#B5620E">+91 98100 12345 📞</div></div>
+          <div class="field-row" style="border:none"><div class="field-label">Present Address</div><div class="field-value">Krishna Nagar, Gwalior, MP</div></div>
+        </div>
+        <div style="padding:0 8px;display:flex;gap:5px">
+          <div class="mc-shortlist">🔖</div>
+          <div style="flex:1;background:#1A7A45;color:#fff;border-radius:8px;padding:6px;text-align:center;font-size:10px;font-weight:600">✓ Matched</div>
+        </div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ ROW 4 — HOME FEED ══ -->
+<div class="section-title">Screen 4 — Match Feed (Home)</div>
+<div class="row">
+
+  <div class="phone">
+    <div class="phone-label">4 · Home Feed</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div class="header">
+          <div><div class="hdr-title">Namaste, Divyanshi 🙏</div><div class="hdr-sub">5 new matches today</div></div>
+          <div class="hdr-icons">
+            <div class="hdr-btn">🔍</div>
+            <div class="hdr-btn">☰</div>
+          </div>
+        </div>
+        <div class="pills-row">
+          <div class="pill pill-gold">👥 New</div>
+          <div class="pill pill-inactive">👑 Premium</div>
+          <div class="pill pill-inactive">30+ Age</div>
+          <div class="pill pill-inactive">Divorce</div>
+          <div class="pill pill-purple">★ Manglik</div>
+          <div class="pill pill-inactive">💼 Business</div>
+        </div>
+        <div class="top-pick">
+          <div class="tp-label">★ Today's top pick · आज की टॉप पिक</div>
+          <div class="tp-body">
+            <div class="tp-avatar">👨‍💼</div>
+            <div class="tp-info"><div class="tp-name">Rahul Gupta, 29</div><div class="tp-sub">MBA · Bhopal · 32/36 Uttam</div></div>
+            <div class="tp-btn">Interest</div>
+          </div>
+        </div>
+        <div style="padding:4px 8px 2px;font-size:10px;font-weight:600;color:#3D2E1A;display:flex;justify-content:space-between">
+          <span>Latest Profiles / नवीनतम प्रोफाइल</span>
+          <span style="font-size:9px;color:#B5620E">View All →</span>
+        </div>
+        <div class="card">
+          <div class="match-card-photo">
+            👨
+            <div class="mc-pills"><span class="pill pill-inactive" style="font-size:7px">Sijariya</span><span class="pill pill-inactive" style="font-size:7px">Marketing</span></div>
+            <div class="mc-verified"><span class="pill pill-green" style="font-size:7px">✓ Verified</span></div>
+            <div class="mc-share">↗</div>
+            <div class="mc-overlay"><div class="mc-id">GS 24315</div><div class="mc-name">Ajay Jain, 28</div></div>
+          </div>
+          <div class="mc-body">
+            <div class="mc-meta">MBA · Indore, MP · <span style="color:#1A7A45">● Active today</span></div>
+            <div class="mc-actions">
+              <div class="mc-shortlist">🔖</div>
+              <div class="gold-btn" style="font-size:9px;padding:5px">Send Interest / रुचि भेजें</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bni active"><div class="bni-icon" style="color:#B5620E">🏠</div><div class="bni-label" style="color:#B5620E">Home</div></div>
+        <div class="bni"><div class="bni-icon">🔍</div><div class="bni-label">Search</div></div>
+        <div class="bni"><div class="bni-fab"><div class="bni-icon">♥</div></div><div class="bni-label" style="color:#B5620E;margin-top:2px">Interests</div></div>
+        <div class="bni"><div class="bni-icon">🔔</div><div class="bni-label">Alerts</div></div>
+        <div class="bni"><div class="bni-icon">👤</div><div class="bni-label">Profile</div></div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+<!-- ══ ROW 5 — INTERESTS ══ -->
+  <div class="phone">
+    <div class="phone-label">5 · Interests Inbox</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div style="padding:8px 10px 4px;font-size:13px;font-weight:600;color:#B5620E">INTEREST / रुचि</div>
+        <div style="padding:0 10px 6px;font-size:9px;color:#8A7A60">Manage your connections and pending requests</div>
+        <div class="tab-bar">
+          <div class="tab active">Received</div>
+          <div class="tab">Sent</div>
+          <div class="tab">Accepted</div>
+          <div class="tab">Views</div>
+        </div>
+        <div class="interest-card">
+          <div class="ic-photo">👩</div>
+          <div class="ic-info">
+            <div class="ic-name">Shruti Gupta ✓</div>
+            <div class="ic-meta">29 yrs · Gwalior, MP</div>
+            <div style="display:flex;gap:4px;margin-top:4px">
+              <div style="flex:1;background:#B5620E;color:#fff;border-radius:6px;padding:4px;text-align:center;font-size:9px;font-weight:600">Accept</div>
+              <div style="flex:1;background:#FEF0F0;color:#C0392B;border-radius:6px;padding:4px;text-align:center;font-size:9px;font-weight:600;border:.5px solid #F0A0A0">Decline</div>
+            </div>
+          </div>
+        </div>
+        <div class="interest-card">
+          <div class="ic-photo">👩‍💼</div>
+          <div class="ic-info">
+            <div class="ic-name">Mansi Gupta</div>
+            <div class="ic-meta">27 yrs · Indore, MP</div>
+            <div style="display:flex;gap:4px;margin-top:4px">
+              <div style="flex:1;background:#B5620E;color:#fff;border-radius:6px;padding:4px;text-align:center;font-size:9px;font-weight:600">Accept</div>
+              <div style="flex:1;background:#FEF0F0;color:#C0392B;border-radius:6px;padding:4px;text-align:center;font-size:9px;font-weight:600;border:.5px solid #F0A0A0">Decline</div>
+            </div>
+          </div>
+        </div>
+        <div class="accepted-card">
+          <div class="ac-banner">✓ Request Accepted</div>
+          <div class="interest-card" style="border-bottom:none">
+            <div class="ic-photo" style="background:#EAF3DE">👩</div>
+            <div class="ic-info">
+              <div class="ic-name" style="color:#1A7A45">Palak Choudha</div>
+              <div class="ic-meta">26 yrs · Katni, MP</div>
+              <div style="font-size:9px;color:#B5620E;margin-top:3px">📞 +91 98270 27044</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:6px 10px;font-size:9px;color:#8A7A60;text-align:center">
+          Free: showing 3 of 8 received interests · <span style="color:#B5620E">Upgrade to see all</span>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bni"><div class="bni-icon">🏠</div><div class="bni-label">Home</div></div>
+        <div class="bni"><div class="bni-icon">🔍</div><div class="bni-label">Search</div></div>
+        <div class="bni"><div class="bni-fab"><div class="bni-icon">♥</div></div><div class="bni-label" style="color:#B5620E;margin-top:2px">Interests</div></div>
+        <div class="bni"><div class="bni-icon">🔔</div><div class="bni-label">Alerts</div></div>
+        <div class="bni"><div class="bni-icon">👤</div><div class="bni-label">Profile</div></div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+<!-- ══ ROW 6 — SEARCH ══ -->
+  <div class="phone">
+    <div class="phone-label">6 · Search</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div style="padding:8px 10px 6px;font-size:13px;font-weight:600;color:#3D2E1A">Search / खोजें</div>
+        <div class="search-section">
+          <div class="search-section-title">Find Matches</div>
+          <div style="display:flex;gap:6px;padding:6px 8px">
+            <div style="flex:1;background:#B5620E;color:#fff;border-radius:8px;padding:6px;text-align:center;font-size:10px;font-weight:600">👨 Male</div>
+            <div style="flex:1;background:#F5F0E8;color:#5C3A1A;border-radius:8px;padding:6px;text-align:center;font-size:10px;border:.5px solid #E8E0D0">👩 Female</div>
+          </div>
+          <div style="display:flex;gap:6px;padding:0 8px 6px">
+            <div class="form-input">Age: 22</div>
+            <div style="font-size:9px;color:#8A7A60;padding-top:5px">to</div>
+            <div class="form-input">Age: 32</div>
+          </div>
+          <div class="search-btn">Find Matches</div>
+        </div>
+        <div class="search-or">OR</div>
+        <div class="search-section">
+          <div class="search-section-title">Search by Profile ID</div>
+          <div class="search-input"><span>GS 24325</span><span>🔍</span></div>
+          <div style="margin:0 8px 6px;background:#3D2E1A;color:#fff;border-radius:8px;padding:6px;text-align:center;font-size:10px;font-weight:600">Find Profile by ID</div>
+        </div>
+        <div class="search-or">OR</div>
+        <div class="search-section">
+          <div class="search-section-title">Search by Name</div>
+          <div class="search-input"><span style="color:#8A7A60">First Name</span></div>
+          <div style="margin:0 8px 6px;background:#3D2E1A;color:#fff;border-radius:8px;padding:6px;text-align:center;font-size:10px;font-weight:600">Find Profile by Name</div>
+        </div>
+        <div style="display:flex;gap:6px;padding:6px 8px">
+          <div style="flex:1;background:#F5F0E8;color:#5C3A1A;border-radius:8px;padding:6px;text-align:center;font-size:9px;border:.5px solid #E8E0D0">⚙ More Filters</div>
+          <div style="flex:1;background:#F5F0E8;color:#5C3A1A;border-radius:8px;padding:6px;text-align:center;font-size:9px;border:.5px solid #E8E0D0">💼 By Profession</div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bni"><div class="bni-icon">🏠</div><div class="bni-label">Home</div></div>
+        <div class="bni active"><div class="bni-icon" style="color:#B5620E">🔍</div><div class="bni-label" style="color:#B5620E">Search</div></div>
+        <div class="bni"><div class="bni-fab"><div class="bni-icon">♥</div></div><div class="bni-label" style="color:#B5620E;margin-top:2px">Interests</div></div>
+        <div class="bni"><div class="bni-icon">🔔</div><div class="bni-label">Alerts</div></div>
+        <div class="bni"><div class="bni-icon">👤</div><div class="bni-label">Profile</div></div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ ROW 5 — DRAWER + SETTINGS ══ -->
+<div class="section-title">Screen 7 — Hamburger Drawer &nbsp;|&nbsp; Screen 8 — Settings</div>
+<div class="row">
+
+  <!-- Drawer -->
+  <div class="phone">
+    <div class="phone-label">7 · Hamburger Drawer</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div class="drawer-overlay">
+          <div class="drawer-scrim"></div>
+          <div class="drawer-panel">
+            <div class="drawer-header">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+                <div class="dh-avatar">🙍‍♀️</div>
+                <div><div class="dh-name">Divyanshi B.</div><div class="dh-sub">GS24300 · Paid</div></div>
+              </div>
+              <div class="dh-stats">
+                <div class="dh-stat"><div class="dhs-num">547</div><div class="dhs-label">Views</div></div>
+                <div class="dh-stat"><div class="dhs-num">8</div><div class="dhs-label">Interests</div></div>
+                <div class="dh-stat"><div class="dhs-num">3</div><div class="dhs-label">Matched</div></div>
+              </div>
+            </div>
+            <div class="drawer-section">Quick Access</div>
+            <div class="drawer-item"><span class="di-icon">🏠</span>Home</div>
+            <div class="drawer-item"><span class="di-icon">♥</span>Interests</div>
+            <div class="drawer-item"><span class="di-icon">👁</span><div><div>Viewed by</div><div class="di-sub">किसने देखा</div></div></div>
+            <div class="drawer-item"><span class="di-icon">⭐</span>Shortlist</div>
+            <div class="drawer-section">Browse</div>
+            <div class="drawer-item"><span class="di-icon secondary">👥</span>New Today</div>
+            <div class="drawer-item"><span class="di-icon secondary">👴</span>30+ Age</div>
+            <div class="drawer-item"><span class="di-icon secondary">💔</span>Divorce</div>
+            <div class="drawer-item"><span class="di-icon secondary">🕊</span>Widowed</div>
+            <div class="drawer-section">Search</div>
+            <div class="drawer-item"><span class="di-icon secondary">🪪</span>By Profile ID</div>
+            <div class="drawer-item"><span class="di-icon secondary">🔤</span>By Name</div>
+            <div class="drawer-item"><span class="di-icon secondary">💼</span>By Profession</div>
+            <div class="drawer-section">More</div>
+            <div class="drawer-item"><span class="di-icon secondary">👑</span>Plans</div>
+            <div class="drawer-item"><span class="di-icon secondary">🏆</span>Success Stories</div>
+            <div class="drawer-item"><span class="di-icon secondary">📞</span><div><div>Helpline</div><div class="di-sub">+91 89829 55385</div></div></div>
+            <div class="drawer-item"><span class="di-icon secondary">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="phone">
+    <div class="phone-label">8 · Settings</div>
+    <div class="phone-shell">
+      <div class="notch"><div class="notch-dot"></div></div>
+      <div class="screen">
+        <div class="sbar"><span class="sbar-time">9:41</span><div class="sbar-icons"><div class="sbar-dot"></div></div></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px 10px">
+          <div style="font-size:14px">←</div>
+          <div style="font-size:13px;font-weight:600;color:#3D2E1A">Settings / सेटिंग्स</div>
+        </div>
+        <div class="section-row">Appearance</div>
+        <div class="settings-box">
+          <div class="settings-row">
+            <div><div class="settings-label">🌙 Dark theme</div><div class="settings-sub">Light / Dark mode</div></div>
+            <div class="tog tog-off"><div class="tog-thumb" style="left:2px"></div></div>
+          </div>
+          <div class="settings-row">
+            <div><div class="settings-label">🌐 Language / भाषा</div><div class="settings-sub">Currently: English</div></div>
+            <div style="display:flex;gap:3px">
+              <div style="background:#B5620E;color:#fff;border-radius:4px;padding:2px 6px;font-size:9px;font-weight:600">EN</div>
+              <div style="background:#F5EFE0;color:#8A7A60;border-radius:4px;padding:2px 6px;font-size:9px">हि</div>
+            </div>
+          </div>
+        </div>
+        <div class="section-row">Privacy</div>
+        <div class="settings-box">
+          <div class="settings-row">
+            <div><div class="settings-label">🙈 Hide profile</div><div class="settings-sub">Disappear from match feeds</div></div>
+            <div class="tog tog-off"><div class="tog-thumb" style="left:2px"></div></div>
+          </div>
+        </div>
+        <div class="section-row">Notifications</div>
+        <div class="settings-box">
+          <div class="settings-row">
+            <div class="settings-label">📧 Email notifications</div>
+            <div class="tog tog-on"><div class="tog-thumb" style="right:2px"></div></div>
+          </div>
+          <div class="settings-row">
+            <div><div class="settings-label">📋 Weekly digest</div><div class="settings-sub">Top matches every Monday</div></div>
+            <div class="tog tog-on"><div class="tog-thumb" style="right:2px"></div></div>
+          </div>
+        </div>
+        <div class="section-row">Account & Security</div>
+        <div class="settings-box">
+          <div class="settings-row"><div class="settings-label">🔒 Change password</div><div>›</div></div>
+          <div class="settings-row"><div class="settings-label" style="color:#C0392B">🗑 Delete account</div><div>›</div></div>
+        </div>
+        <div class="section-row">Legal & About</div>
+        <div class="settings-box">
+          <div class="settings-row"><div class="settings-label">🛡 Privacy Policy</div><div>›</div></div>
+          <div class="settings-row"><div class="settings-label">📄 Terms of Use</div><div>›</div></div>
+          <div class="settings-row"><div class="settings-label">💰 Refund Policy</div><div>›</div></div>
+          <div class="settings-row"><div class="settings-label">ℹ About Us · v1.0.0</div><div>›</div></div>
+        </div>
+        <div class="section-row">Support</div>
+        <div class="settings-box">
+          <div class="settings-row"><div><div class="settings-label">🎧 Helpline</div><div class="settings-sub" style="color:#B5620E">Tue–Sun · 11AM–5PM</div></div><div>›</div></div>
+          <div class="settings-row"><div class="settings-label">✉ Contact Us</div><div>›</div></div>
+        </div>
+        <div style="padding:6px 8px">
+          <div class="red-btn">🚪 Log out / लॉग आउट</div>
+        </div>
+      </div>
+      <div class="home-bar"><div class="home-pill"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<div style="text-align:center;color:#8A7A60;font-size:12px;margin-top:40px;padding-bottom:40px">
+  Gahoi Sarthi (गहोई सारथी) · Design Reference v1.0 · June 2026 · All 9 Screens · Confidential
+</div>
+
+</body>
+</html>
