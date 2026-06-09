@@ -1,0 +1,51 @@
+{
+  "home": {
+    "matchCard": {
+      "sendInterest": "Send Interest",
+      "shortlist": "Shortlist",
+      "viewProfile": "View Profile"
+    },
+    "topPick": {
+      "label": "Today's Top Pick"
+    }
+  },
+  "profile": {
+    "wizard": {
+      "step1": {
+        "gotraLabel": "Gotra / गोत्र",
+        "manglikLabel": "Manglik Status / मांगलिक स्थिति"
+      }
+    },
+    "sections": {
+      "basic": "Basic Details",
+      "education": "Education",
+      "occupation": "Occupation",
+      "family": "Family",
+      "preferences": "Partner Preferences",
+      "gallery": "Photos"
+    }
+  },
+  "settings": {
+    "language": {
+      "title": "Language / भाषा"
+    }
+  },
+  "interests": {
+    "tabs": {
+      "received": "Received",
+      "sent": "Sent",
+      "accepted": "Accepted"
+    }
+  },
+  "kundli": {
+    "uttam": "Uttam",
+    "madhyam": "Madhyam",
+    "vicharYogya": "Vichar Yogya"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "logout": "Log Out",
+    "delete": "Delete Account"
+  }
+}

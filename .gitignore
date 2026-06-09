@@ -1,0 +1,14 @@
+node_modules
+.turbo
+dist
+.next
+out
+.expo
+*.tsbuildinfo
+.env
+.env.local
+.env*.local
+*.pem
+prisma/migrations/*.sql
+coverage
+.DS_Store

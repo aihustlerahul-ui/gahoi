@@ -1,0 +1,399 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  Platform,
+} from 'react-native';
+import { useAuth } from '../../src/lib/auth';
+import { apiRequest } from '../../src/lib/api';
+import { changeLanguage } from '../../src/lib/i18n';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+
+export default function SettingsScreen() {
+  const router = useRouter();
+  const { t, i18n } = useTranslation();
+  const { userProfile, logoutUser, refreshProfile } = useAuth();
+  const [updatingLang, setUpdatingLang] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const currentLang = i18n.language || 'en';
+
+  const handleLanguageChange = async (lang: 'en' | 'hi') => {
+    if (lang === currentLang) return;
+    setUpdatingLang(true);
+    try {
+      // 1. Update on server
+      await apiRequest('/profile/me/language', {
+        method: 'PATCH',
+        body: JSON.stringify({ language: lang }),
+      });
+      // 2. Change local i18n instance & persist in SecureStore
+      await changeLanguage(lang);
+      // 3. Refresh user profile context
+      await refreshProfile();
+      
+      Alert.alert(
+        lang === 'hi' ? 'सफलता' : 'Success',
+        lang === 'hi' ? 'भाषा सफलतापूर्वक बदली गई!' : 'Language changed successfully!'
+      );
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to update language');
+    } finally {
+      setUpdatingLang(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      currentLang === 'hi' ? 'लॉग आउट' : 'Log Out',
+      currentLang === 'hi' ? 'क्या आप लॉग आउट करना चाहते हैं?' : 'Are you sure you want to log out?',
+      [
+        { text: currentLang === 'hi' ? 'रद्द करें' : 'Cancel', style: 'cancel' },
+        {
+          text: currentLang === 'hi' ? 'लॉग आउट' : 'Log Out',
+          style: 'destructive',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              await logoutUser();
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Logout failed');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      currentLang === 'hi' ? 'खाता हटाएं' : 'Delete Account',
+      currentLang === 'hi' 
+        ? 'क्या आप वास्तव में अपना खाता हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती और आपका सारा डेटा हटा दिया जाएगा।' 
+        : 'Are you sure you want to delete your account? This action is permanent and all your profile data will be permanently deleted.',
+      [
+        { text: currentLang === 'hi' ? 'रद्द करें' : 'Cancel', style: 'cancel' },
+        {
+          text: currentLang === 'hi' ? 'हटाएं' : 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              const res = await apiRequest('/profile/me', {
+                method: 'DELETE',
+              });
+              if (res.success) {
+                await logoutUser();
+                Alert.alert(
+                  currentLang === 'hi' ? 'सफलता' : 'Success',
+                  currentLang === 'hi' ? 'आपका खाता सफलतापूर्वक हटा दिया गया है।' : 'Your account has been deleted successfully.'
+                );
+              }
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Failed to delete account');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#E8B84B" />
+      </View>
+    );
+  }
+
+  const isPremium = userProfile?.user?.tier === 'paid';
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      {/* Profile summary header */}
+      <View style={styles.profileCard}>
+        <View style={styles.avatarContainer}>
+          <Ionicons name="person" size={40} color="#E8B84B" />
+        </View>
+        <View style={styles.profileDetails}>
+          <Text style={styles.profileId}>
+            {userProfile ? `GS-${userProfile.profileId}` : 'Gahoi Member'}
+          </Text>
+          <Text style={styles.profileEmail}>{userProfile?.user?.email || ''}</Text>
+          <View style={[styles.tierBadge, isPremium ? styles.premiumBadge : styles.freeBadge]}>
+            <Ionicons name={isPremium ? 'shield-checkmark' : 'shield-outline'} size={14} color={isPremium ? '#1A0800' : '#D4BFA0'} />
+            <Text style={[styles.tierText, isPremium ? styles.premiumText : styles.freeText]}>
+              {isPremium ? 'PREMIUM / प्रीमियम' : 'FREE / फ्री'}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Language Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>
+          {currentLang === 'hi' ? 'भाषा सेटिंग्स' : 'Language Settings'}
+        </Text>
+        <View style={styles.langSelector}>
+          <TouchableOpacity
+            style={[styles.langOption, currentLang === 'en' && styles.langOptionSelected]}
+            onPress={() => handleLanguageChange('en')}
+            disabled={updatingLang}
+          >
+            <Text style={[styles.langText, currentLang === 'en' && styles.langTextSelected]}>
+              English
+            </Text>
+            {currentLang === 'en' && (
+              <Ionicons name="checkmark-circle" size={18} color="#E8B84B" />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.langOption, currentLang === 'hi' && styles.langOptionSelected]}
+            onPress={() => handleLanguageChange('hi')}
+            disabled={updatingLang}
+          >
+            <Text style={[styles.langText, currentLang === 'hi' && styles.langTextSelected]}>
+              हिन्दी
+            </Text>
+            {currentLang === 'hi' && (
+              <Ionicons name="checkmark-circle" size={18} color="#E8B84B" />
+            )}
+          </TouchableOpacity>
+        </View>
+        {updatingLang && <ActivityIndicator size="small" color="#E8B84B" style={{ marginTop: 8 }} />}
+      </View>
+
+      {/* Menu Options Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>
+          {currentLang === 'hi' ? 'सुविधाएं' : 'Features'}
+        </Text>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => router.push('/profile/views')}
+        >
+          <View style={styles.menuLeft}>
+            <Ionicons name="eye-outline" size={20} color="#D4BFA0" />
+            <Text style={styles.menuText}>
+              {currentLang === 'hi' ? 'किसने मेरी प्रोफ़ाइल देखी' : 'Who Viewed My Profile'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#8A7A60" />
+        </TouchableOpacity>
+
+        {!isPremium && (
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => router.push('/payment/checkout')}
+          >
+            <View style={styles.menuLeft}>
+              <Ionicons name="gift-outline" size={20} color="#E8B84B" />
+              <Text style={[styles.menuText, { color: '#E8B84B' }]}>
+                {currentLang === 'hi' ? 'प्रीमियम में अपग्रेड करें' : 'Upgrade to Premium'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#E8B84B" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Account actions */}
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>
+          {currentLang === 'hi' ? 'खाता विकल्प' : 'Account Actions'}
+        </Text>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color="#1A0800" />
+          <Text style={styles.logoutButtonText}>
+            {currentLang === 'hi' ? 'लॉग आउट' : 'Log Out'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
+          <Ionicons name="trash-outline" size={18} color="#FF6F61" />
+          <Text style={styles.deleteButtonText}>
+            {currentLang === 'hi' ? 'खाता हमेशा के लिए हटाएं' : 'Permanently Delete Account'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1A0800',
+  },
+  contentContainer: {
+    padding: 16,
+  },
+  centerContainer: {
+    flex: 1,
+    backgroundColor: '#1A0800',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2C1A10',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#3D281C',
+    padding: 16,
+    marginBottom: 24,
+  },
+  avatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#1C0D05',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#3D281C',
+  },
+  profileDetails: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  profileId: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
+  profileEmail: {
+    color: '#8A7A60',
+    fontSize: 14,
+    marginTop: 2,
+  },
+  tierBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginTop: 8,
+  },
+  freeBadge: {
+    backgroundColor: '#3D281C',
+  },
+  premiumBadge: {
+    backgroundColor: '#E8B84B',
+  },
+  tierText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  freeText: {
+    color: '#D4BFA0',
+  },
+  premiumText: {
+    color: '#1A0800',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    color: '#D4BFA0',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 12,
+  },
+  langSelector: {
+    backgroundColor: '#2C1A10',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#3D281C',
+    overflow: 'hidden',
+  },
+  langOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3D281C',
+  },
+  langOptionSelected: {
+    backgroundColor: '#382216',
+  },
+  langText: {
+    color: '#8A7A60',
+    fontSize: 15,
+  },
+  langTextSelected: {
+    color: '#E8B84B',
+    fontWeight: 'bold',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#2C1A10',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#3D281C',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  menuLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuText: {
+    color: '#D4BFA0',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 12,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E8B84B',
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginBottom: 16,
+  },
+  logoutButtonText: {
+    color: '#1A0800',
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+  },
+  deleteButtonText: {
+    color: '#FF6F61',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+});

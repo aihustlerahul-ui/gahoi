@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Gahoi Sarthi",
+    "slug": "gahoi-sarthi",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "gahoisarthi",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#1A0800"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "in.gahoisarthi.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1A0800"
+      },
+      "package": "in.gahoisarthi.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#E8B84B",
+          "sounds": []
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
