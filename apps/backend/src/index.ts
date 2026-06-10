@@ -24,12 +24,23 @@ app.use('/v1/payments/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '1mb' }));
 
 // ── CORS ───────────────────────────────────────────────────────────────────────
+const corsOrigins = [
+  process.env.FRONTEND_URL ?? 'http://localhost:3000',
+  process.env.ADMIN_URL ?? 'http://localhost:3002',
+];
+
+if (process.env.NODE_ENV !== 'production') {
+  // Expo web dev (Metro serves on varying ports)
+  corsOrigins.push(
+    'http://localhost:8081',
+    'http://localhost:8090',
+    'http://localhost:19006',
+  );
+}
+
 app.use(
   cors({
-    origin: [
-      process.env.FRONTEND_URL ?? 'http://localhost:3000',
-      process.env.ADMIN_URL ?? 'http://localhost:3002',
-    ],
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Authorization', 'Content-Type'],

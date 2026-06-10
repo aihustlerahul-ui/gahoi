@@ -3,7 +3,7 @@ import { Stack, router, useSegments } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/lib/auth';
 import { initI18n } from '../src/lib/i18n';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, View, StyleSheet } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import {
   configureNotificationHandler,
@@ -13,7 +13,9 @@ import {
 } from '../src/lib/notifications';
 import { apiRequest } from '../src/lib/api';
 
-configureNotificationHandler();
+if (Platform.OS !== 'web') {
+  configureNotificationHandler();
+}
 
 function NavigationRoot() {
   const { isLoggedIn, isLoading, userProfile } = useAuth();
@@ -33,6 +35,7 @@ function NavigationRoot() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inTabsGroup = segments[0] === '(tabs)';
+    const isOnboardingComplete = !!(userProfile && userProfile.preferences);
 
     if (!isLoggedIn) {
       // If not logged in, redirect to login screen
@@ -40,15 +43,18 @@ function NavigationRoot() {
         router.replace('/(auth)/login');
       }
     } else {
-      // If logged in, check if profile is created
-      if (!userProfile) {
-        // No profile, redirect to wizard
+      // If logged in, check if onboarding is complete
+      if (!isOnboardingComplete) {
+        // Redirect to wizard if not already there
         if (segments[0] !== 'profile' || segments[1] !== 'wizard') {
           router.replace('/profile/wizard');
         }
       } else {
-        // Profile exists, redirect to main tabs if not in allowed post-auth routes
+        // Profile exists and onboarding is complete, redirect to main tabs if not in allowed post-auth routes
         if (!inTabsGroup && segments[0] !== 'profile' && segments[0] !== 'payment') {
+          router.replace('/(tabs)');
+        } else if (segments[0] === 'profile' && segments[1] === 'wizard') {
+          // If onboarding is complete but user is still on wizard screen, redirect to main tabs
           router.replace('/(tabs)');
         }
       }
@@ -57,7 +63,7 @@ function NavigationRoot() {
 
   // Register push token when user logs in
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn || Platform.OS === 'web') return;
 
     registerForPushNotifications().then((token) => {
       if (!token) return;

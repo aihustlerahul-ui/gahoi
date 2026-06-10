@@ -1,10 +1,13 @@
 import { Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import { deleteSecureItem, getSecureItem, setSecureItem } from './secure-storage';
 
 let API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001/v1';
 
 if (__DEV__) {
-  if (Platform.OS === 'android') {
+  if (Platform.OS === 'web') {
+    // LAN IP in .env is for device/emulator; browser dev uses localhost by default
+    API_URL = process.env.EXPO_PUBLIC_API_URL_WEB ?? 'http://localhost:3001/v1';
+  } else if (Platform.OS === 'android') {
     API_URL = API_URL.replace('localhost', '10.0.2.2');
   }
 }
@@ -30,12 +33,12 @@ export function subscribeAuthChange(callback: (isLoggedIn: boolean) => void) {
 const REFRESH_TOKEN_KEY = 'gahoi_refresh_token';
 
 export async function saveRefreshToken(token: string) {
-  await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, token);
+  await setSecureItem(REFRESH_TOKEN_KEY, token);
 }
 
 export async function getRefreshToken(): Promise<string | null> {
   try {
-    return await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+    return await getSecureItem(REFRESH_TOKEN_KEY);
   } catch {
     return null;
   }
@@ -44,7 +47,7 @@ export async function getRefreshToken(): Promise<string | null> {
 export async function deleteTokens() {
   _accessToken = null;
   try {
-    await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+    await deleteSecureItem(REFRESH_TOKEN_KEY);
   } catch {}
   if (_onAuthChange) {
     _onAuthChange(false);

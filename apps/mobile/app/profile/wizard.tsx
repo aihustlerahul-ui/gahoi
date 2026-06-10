@@ -16,13 +16,14 @@ import { useAuth } from '../../src/lib/auth';
 import { apiRequest } from '../../src/lib/api';
 
 export default function ProfileWizardScreen() {
-  const { refreshProfile } = useAuth();
+  const { userProfile, refreshProfile } = useAuth();
   
   // Wizard flow state
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasPrefilled, setHasPrefilled] = useState(false);
 
   // Lists loaded from backend
   const [gotrasList, setGotrasList] = useState<{ id: number; name: string }[]>([]);
@@ -104,6 +105,92 @@ export default function ProfileWizardScreen() {
     }
     loadMetadata();
   }, []);
+
+  // Prefill profile data if exists
+  useEffect(() => {
+    if (!userProfile || hasPrefilled) return;
+
+    // Step 1 Details
+    if (userProfile.gender) setGender(userProfile.gender);
+    if (userProfile.gotra) setGotra(userProfile.gotra);
+    if (userProfile.aakna) setAakna(userProfile.aakna);
+    if (userProfile.manglikStatus) setManglikStatus(userProfile.manglikStatus);
+    if (userProfile.maritalStatus) setMaritalStatus(userProfile.maritalStatus);
+    if (userProfile.dateOfBirth) {
+      const dob = new Date(userProfile.dateOfBirth);
+      if (!isNaN(dob.getTime())) {
+        setDobYear(String(dob.getFullYear()));
+        setDobMonth(String(dob.getMonth() + 1).padStart(2, '0'));
+        setDobDay(String(dob.getDate()).padStart(2, '0'));
+      }
+    }
+    if (userProfile.timeOfBirth) setTimeOfBirth(userProfile.timeOfBirth);
+    if (userProfile.height_cm) setHeightCm(String(userProfile.height_cm));
+    if (userProfile.complexion) setComplexion(userProfile.complexion);
+    if (userProfile.mobile) setMobile(userProfile.mobile);
+    if (userProfile.livingCityId) setLivingCityId(userProfile.livingCityId);
+    if (userProfile.aboutMe) setAboutMe(userProfile.aboutMe);
+
+    // Step 2 Details (Education)
+    if (userProfile.education) {
+      if (userProfile.education.highestDegree) setHighestDegree(userProfile.education.highestDegree);
+      if (userProfile.education.fieldOfStudy) setFieldOfStudy(userProfile.education.fieldOfStudy);
+      if (userProfile.education.institution) setInstitution(userProfile.education.institution);
+      if (userProfile.education.completionYear) setCompletionYear(String(userProfile.education.completionYear));
+    }
+
+    // Step 3 Details (Occupation)
+    if (userProfile.occupation) {
+      if (userProfile.occupation.type) setOccupationType(userProfile.occupation.type);
+      if (userProfile.occupation.jobTitle) setJobTitle(userProfile.occupation.jobTitle);
+      if (userProfile.occupation.employer) setEmployer(userProfile.occupation.employer);
+      if (userProfile.occupation.annualIncomeMin) setAnnualIncomeMin(String(userProfile.occupation.annualIncomeMin));
+      if (userProfile.occupation.annualIncomeMax) setAnnualIncomeMax(String(userProfile.occupation.annualIncomeMax));
+    }
+
+    // Step 4 Details (Family)
+    if (userProfile.family) {
+      if (userProfile.family.fatherName) setFatherName(userProfile.family.fatherName);
+      if (userProfile.family.fatherMobile) setFatherMobile(userProfile.family.fatherMobile);
+      if (userProfile.family.fatherOccupation) setFatherOccupation(userProfile.family.fatherOccupation);
+      if (userProfile.family.motherName) setMotherName(userProfile.family.motherName);
+      if (userProfile.family.motherOccupation) setMotherOccupation(userProfile.family.motherOccupation);
+      if (userProfile.family.siblings !== undefined && userProfile.family.siblings !== null) setSiblings(String(userProfile.family.siblings));
+      if (userProfile.family.familyType) setFamilyType(userProfile.family.familyType);
+      if (userProfile.family.familyStatus) setFamilyStatus(userProfile.family.familyStatus);
+      if (userProfile.family.homeAddress) setHomeAddress(userProfile.family.homeAddress);
+    }
+
+    // Step 5 Details (Preferences)
+    if (userProfile.preferences) {
+      if (userProfile.preferences.ageMin) setPrefAgeMin(String(userProfile.preferences.ageMin));
+      if (userProfile.preferences.ageMax) setPrefAgeMax(String(userProfile.preferences.ageMax));
+      if (userProfile.preferences.heightMinCm) setPrefHeightMin(String(userProfile.preferences.heightMinCm));
+      if (userProfile.preferences.heightMaxCm) setPrefHeightMax(String(userProfile.preferences.heightMaxCm));
+      if (userProfile.preferences.maritalStatus) setPrefMaritalStatus(userProfile.preferences.maritalStatus);
+      if (userProfile.preferences.educationMin) setPrefEducationMin(userProfile.preferences.educationMin);
+      if (userProfile.preferences.incomeMin) setPrefIncomeMin(String(userProfile.preferences.incomeMin));
+      if (userProfile.preferences.manglikPreference) setPrefManglik(userProfile.preferences.manglikPreference);
+      if (userProfile.preferences.excludeSameGotra !== undefined) setExcludeSameGotra(userProfile.preferences.excludeSameGotra);
+    }
+
+    // Set step based on completeness
+    if (!userProfile.gender || !userProfile.mobile || !userProfile.livingCityId) {
+      setStep(1);
+    } else if (!userProfile.education || !userProfile.education.highestDegree) {
+      setStep(2);
+    } else if (!userProfile.occupation || !userProfile.occupation.type) {
+      setStep(3);
+    } else if (!userProfile.family || !userProfile.family.fatherName) {
+      setStep(4);
+    } else if (!userProfile.preferences) {
+      setStep(5);
+    } else {
+      setStep(5);
+    }
+
+    setHasPrefilled(true);
+  }, [userProfile, hasPrefilled]);
 
   const handleSaveStep1 = async () => {
     // Validate

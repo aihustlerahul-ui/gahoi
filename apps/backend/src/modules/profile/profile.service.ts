@@ -135,6 +135,19 @@ export function serializeMaskedProfile(profile: FullProfile) {
       familyType: profile.family?.familyType,
       familyStatus: profile.family?.familyStatus,
     },
+    preferences: profile.preferences ? {
+      ageMin: profile.preferences.ageMin,
+      ageMax: profile.preferences.ageMax,
+      heightMinCm: profile.preferences.heightMinCm,
+      heightMaxCm: profile.preferences.heightMaxCm,
+      maritalStatus: profile.preferences.maritalStatus,
+      educationMin: profile.preferences.educationMin,
+      incomeMin: profile.preferences.incomeMin,
+      manglikPreference: profile.preferences.manglikPreference,
+      excludeSameGotra: profile.preferences.excludeSameGotra,
+      preferredCityIds: profile.preferences.preferredCityIds,
+      preferredCountries: profile.preferences.preferredCountries,
+    } : null,
   };
 }
 
@@ -272,6 +285,12 @@ export async function upsertPreferences(userId: string, data: UpdatePreferencesI
     update: data,
     create: { profileId: userId, ...data },
   });
+
+  const profile = await prisma.profile.findUnique({ where: { id: userId }, include: FULL_PROFILE_INCLUDE });
+  if (profile) {
+    const pct = computeCompleteness(profile as FullProfile);
+    await prisma.profile.update({ where: { id: userId }, data: { profileCompletenessPct: pct } });
+  }
 }
 
 /**

@@ -1,3 +1,6 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+
+# pnpm isolated installs break Metro web + Android Gradle module resolution in Expo SDK 51
+nodeLinker: hoisted

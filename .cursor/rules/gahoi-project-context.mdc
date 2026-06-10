@@ -1,0 +1,84 @@
+---
+description: Gahoi Sarthi core product concept, locked stack, and non-negotiable rules
+alwaysApply: true
+---
+
+# Gahoi Sarthi — Project Context
+
+**What it is:** Niche matrimony platform (Android, iOS, web) for the **Hindu Bania Gahoi** community only. Phase 1 MVP. Tagline: *Har Gahoi Parivar Ka Bharosemand Sarthi*.
+
+**Canonical domain:** `gahoisarthi.in` (web, admin, API subdomains). Pending founder items: `items_todo.md`.
+
+**Source of truth (read in order):**
+1. `docs/GahoiSarthi_PRD_v4_Final.docx` — product, tiers, features (v4.2 FULLY LOCKED)
+2. `docs/GahoiSarthi_DesignSpec_v1.docx` — 9 screens, gold/ivory design system
+3. `docs/GahoiSarthi_TechSpec_v1.docx` — monorepo, API, DB, deployment, 20-task checklist
+4. `docs/GahoiSarthi_SecuritySpec_v1.docx` — anti-scraping, masking, auth hardening
+
+**Skills:** `.claude/skills/gahoi-{architecture,api-patterns,security-rules,i18n-patterns}.md`
+
+## Core product concept
+
+- **Community-first:** Gotra, aakna, kuldevi, nakshatra, manglik, mama naam are first-class fields. Gotra exclusion enforced at **DB/query level** (default ON).
+- **Freemium:** Two tiers only — **Free** vs **Paid** (no multi-tier in Phase 1).
+- **Trust:** Admin-moderated profiles/photos, verification badge, report/block, Samaj partnership positioning.
+- **Matching IP:** 10-step weighted scoring (hard filters → manglik → location → prefs → completeness → recency → mutual fit → paid boost → Kundli → exclusions). Nightly cron pre-computes suggestions.
+- **Connection flow:** Interest → email notify → accept/decline → **offline** contact (phone/WhatsApp). No in-app chat/calls in Phase 1.
+- **Kundli:** Ashtakoot via `astrology-js` in backend. Badges: Uttam/उत्तम, Madhyam/मध्यम, Vichar Yogya/विचार योग्य.
+- **Bilingual:** Hindi + English from day one. No hardcoded UI strings. Web: `next-intl`. Mobile: `i18next`. Locales: `packages/shared/locales/{en,hi}.json`.
+
+## 9 screens (Phase 1)
+
+Splash/Auth → Profile Wizard (5 steps) → Own Profile → Other Profile → Match Feed → Interests Inbox (Received/Sent/Accepted/Views) → Search → Hamburger Drawer → Settings.
+
+Visual reference: `docs/GahoiSarthi_Screens_v1.html`. Primary palette: Sacred Gold `#B5620E`, Ivory `#FDFAF5`.
+
+## Locked stack
+
+| Layer | Choice |
+|-------|--------|
+| Monorepo | Turborepo + pnpm |
+| Backend | Node + Express + TS → **Render** (ALL business logic here) |
+| DB | Supabase **PostgreSQL only** — no Auth/Edge/Realtime/Storage |
+| ORM | Prisma v5 |
+| Web/Admin | Next.js 14 → Netlify |
+| Mobile | React Native + Expo SDK 51 |
+| Images | Cloudflare R2 (private bucket, signed URLs) |
+| Email/OTP | Resend |
+| Payments | Razorpay |
+
+**Structure:** `apps/{backend,web,admin,mobile}` · `packages/{shared,email-templates}`
+
+## Non-negotiable rules
+
+- ALL business logic on Render backend — **never** Supabase Edge Functions
+- Never `prisma.$queryRawUnsafe()` — parameterised queries only
+- **Three-tier profile visibility:** free → no PII | paid+no match → masked | paid+matched → full
+- Use `@gahoisarthi/shared/utils/masking` — never roll your own
+- Contact PII never in list/search responses
+- **Cursor pagination only** — never offset/skip/page params; no total in search
+- JWT **RS256** explicitly — never HS256 or `none`
+- R2 private; signed URLs ~2hr expiry; keys `profiles/{userId}/{uuid}.jpg`
+- API envelope: `{ success, data, error, meta: { next_cursor? } }`
+
+## Free vs Paid (summary)
+
+| Capability | Free | Paid |
+|------------|------|------|
+| Daily match cards | 5 | 30 + Top Pick |
+| Interests/day | 5 | Unlimited |
+| Received interests visible | Latest 3 | All |
+| Contact details | Never | After mutual accept |
+| Advanced search / Kundli report | No | Yes |
+
+## Work order
+
+Follow TechSpec **Section 13 — 20-task checklist** exactly. Do not skip tasks. Current: **Task 1** (monorepo scaffold).
+
+## Never without asking
+
+Change stack · skip checklist task · add unlisted third-party service · commit to main directly
+
+## Phase 2 (out of scope)
+
+In-app chat, voice/video, push notifications, SMS OTP, multi-tier pricing, PDF biodata share, AI photo moderation.

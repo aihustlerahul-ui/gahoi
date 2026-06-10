@@ -1,7 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
+import { getSecureItem, setSecureItem } from './secure-storage';
 
 import en from '../../../../packages/shared/locales/en.json';
 import hi from '../../../../packages/shared/locales/hi.json';
@@ -21,10 +20,10 @@ const getDeviceLanguage = (): string => {
 };
 
 export async function initI18n() {
-  let locale = await SecureStore.getItemAsync(LANGUAGE_KEY);
+  let locale = await getSecureItem(LANGUAGE_KEY);
   if (!locale) {
     locale = getDeviceLanguage();
-    await SecureStore.setItemAsync(LANGUAGE_KEY, locale);
+    await setSecureItem(LANGUAGE_KEY, locale);
   }
 
   await i18n.use(initReactI18next).init({
@@ -38,7 +37,7 @@ export async function initI18n() {
 }
 
 export async function changeLanguage(lang: 'en' | 'hi') {
-  await SecureStore.setItemAsync(LANGUAGE_KEY, lang);
+  await setSecureItem(LANGUAGE_KEY, lang);
   await i18n.changeLanguage(lang);
 }
 
