@@ -24,6 +24,14 @@
   },
   "packageManager": "pnpm@10.13.1",
   "pnpm": {
-    "onlyBuiltDependencies": ["@prisma/client", "@prisma/engines", "esbuild", "prisma"]
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ],
+    "ignoredBuiltDependencies": [
+      "unrs-resolver"
+    ]
   }
 }
