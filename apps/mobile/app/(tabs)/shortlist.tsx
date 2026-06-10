@@ -18,7 +18,8 @@ interface ShortlistedItem {
   gender: string;
   gotra: string;
   maritalStatus: string;
-  height_cm: number;
+  heightDisplay?: string | null;
+  height_cm?: number | null;
   livingCity?: { name: string };
 }
 
@@ -70,7 +71,7 @@ export default function ShortlistScreen() {
       <View style={styles.card}>
         <TouchableOpacity
           style={styles.cardBody}
-          onPress={() => router.push(`/profile/${item.id}`)}
+          onPress={() => router.push(`/profile/${item.profileId}`)}
         >
           <View style={styles.avatarPlaceholder}>
             <Ionicons name="bookmark" size={24} color="#E8B84B" />
@@ -81,7 +82,7 @@ export default function ShortlistScreen() {
               {item.gender} • {item.gotra} • {item.livingCity?.name || 'City'}
             </Text>
             <Text style={styles.subText}>
-              {item.maritalStatus} • {item.height_cm} cm
+              {item.maritalStatus} • {item.heightDisplay || (item.height_cm ? `${item.height_cm} cm` : '—')}
             </Text>
           </View>
         </TouchableOpacity>

@@ -21,7 +21,8 @@ interface MatchCandidate {
   gotra: string;
   maritalStatus: string;
   age: number;
-  height_cm: number;
+  heightDisplay?: string | null;
+  height_cm?: number | null;
   city: string;
   education: string;
   occupation: string;
@@ -113,7 +114,7 @@ export default function MatchesScreen() {
     return (
       <View style={styles.card}>
         <TouchableOpacity
-          onPress={() => router.push(`/profile/${item.id}`)}
+          onPress={() => router.push(`/profile/${item.profileId}`)}
           style={styles.cardHeader}
         >
           <Image
@@ -128,7 +129,7 @@ export default function MatchesScreen() {
               <Text style={styles.matchScore}>{item.matchScore}% Match</Text>
             </View>
             <Text style={styles.cardInfo}>
-              {item.age} yrs • {item.height_cm}cm • {item.maritalStatus}
+              {item.age} yrs • {item.heightDisplay || (item.height_cm ? `${item.height_cm} cm` : '—')} • {item.maritalStatus}
             </Text>
             <Text style={styles.cardSubInfo}>
               Gotra: {item.gotra} • {item.city}
@@ -155,7 +156,7 @@ export default function MatchesScreen() {
 
           <TouchableOpacity
             style={[styles.actionButton, styles.primaryAction]}
-            onPress={() => router.push(`/profile/${item.id}`)}
+            onPress={() => router.push(`/profile/${item.profileId}`)}
           >
             <Text style={styles.primaryActionText}>View / देखें</Text>
           </TouchableOpacity>
@@ -188,7 +189,7 @@ export default function MatchesScreen() {
               <Text style={styles.sectionHeader}>Today's Top Pick / आज का मुख्य मिलान</Text>
               <TouchableOpacity
                 style={styles.topPickCard}
-                onPress={() => router.push(`/profile/${topPick.id}`)}
+                onPress={() => router.push(`/profile/${topPick.profileId}`)}
               >
                 <Image
                   source={{ uri: topPick.photoUrl || 'https://via.placeholder.com/300' }}

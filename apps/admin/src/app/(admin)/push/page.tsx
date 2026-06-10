@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Modal } from '@/components/Modal';
 import { PushBannerUpload } from '@/components/PushBannerUpload';
+import { SuperAdminGuard } from '@/components/SuperAdminGuard';
 import { useToast } from '@/contexts/ToastContext';
 import { apiRequest } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
@@ -72,6 +73,7 @@ export default function PushPage() {
   };
 
   return (
+    <SuperAdminGuard>
     <>
       <div className="page-header">
         <h2>Push Notifications</h2>
@@ -230,5 +232,6 @@ export default function PushPage() {
         </Modal>
       )}
     </>
+    </SuperAdminGuard>
   );
 }

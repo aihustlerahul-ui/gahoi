@@ -42,20 +42,49 @@ model State {
 }
 
 model City {
-  id       Int       @id @default(autoincrement())
-  name     String
-  stateId  Int
-  state    State     @relation(fields: [stateId], references: [id])
-  profiles Profile[]
+  id             Int       @id @default(autoincrement())
+  name           String
+  stateId        Int
+  state          State     @relation(fields: [stateId], references: [id])
+  livingProfiles Profile[] @relation("LivingCity")
+  birthProfiles  Profile[] @relation("BirthCity")
 
   @@map("locations_city")
 }
 
 model Gotra {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id           Int          @id @default(autoincrement())
+  key          String       @unique
+  name         String       @unique
+  gotraHindi   String       @map("gotra_hindi")
+  gotraEnglish String       @map("gotra_english")
+  rishi        String?
+  kuldevi      String?      @map("kuldevi")
+  aaknaLinks   GotraAakna[]
+  profiles     Profile[]
 
   @@map("gotras")
+}
+
+model AaknaMaster {
+  id                    Int             @id @default(autoincrement())
+  name                  String          @unique
+  gotraLinks            GotraAakna[]
+  profiles              Profile[]
+  maternalUncleFamilies ProfileFamily[] @relation("MaternalUncleAakna")
+
+  @@map("aakna_master")
+}
+
+model GotraAakna {
+  gotraId       Int         @map("gotra_id")
+  aaknaMasterId Int         @map("aakna_master_id")
+  gotra         Gotra       @relation(fields: [gotraId], references: [id], onDelete: Cascade)
+  aakna         AaknaMaster @relation(fields: [aaknaMasterId], references: [id], onDelete: Cascade)
+
+  @@id([gotraId, aaknaMasterId])
+  @@index([aaknaMasterId])
+  @@map("gotra_aakna")
 }
 
 model User {
@@ -68,6 +97,7 @@ model User {
   status            String         @default("Active")
   tier              String         @default("free")
   lastActiveAt      DateTime?      @map("last_active_at")
+  termsAcceptedAt   DateTime?      @map("terms_accepted_at")
   createdAt         DateTime       @default(now()) @map("created_at")
   updatedAt         DateTime       @updatedAt @map("updated_at")
   expoPushToken     String?        @map("expo_push_token")
@@ -109,17 +139,36 @@ model OtpRequest {
 model Profile {
   id                     String                     @id
   profileId              Int                        @unique @default(autoincrement()) @map("profile_id")
+  firstName              String?                    @map("first_name")
+  lastName               String?                    @map("last_name")
   gender                 String?
+  gotraId                Int?                       @map("gotra_id")
+  aaknaId                Int?                       @map("aakna_id")
   gotra                  String?
   aakna                  String?
   manglikStatus          String                     @default("Non-Manglik") @map("manglik_status")
   maritalStatus          String?                    @map("marital_status")
   dateOfBirth            DateTime?                  @map("date_of_birth")
   timeOfBirth            String?                    @map("time_of_birth")
+  placeOfBirth           String?                    @map("place_of_birth")
+  nakshatra              String?
+  zodiac                 String?
   height_cm              Int?
+  heightFt               Int?                       @map("height_ft")
+  heightIn               Int?                       @map("height_in")
+  weightKg               Float?                     @map("weight_kg")
   complexion             String?
   mobile                 String?
+  mobileCountryCode      Int                        @default(91) @map("mobile_country_code")
+  whatsapp               String?
+  motherTongue           String?                    @map("mother_tongue")
+  disability             String                     @default("No")
+  profileCreatedBy       String?                    @map("profile_created_by")
+  bloodGroup             String?                    @map("blood_group")
+  dietaryHabit           String?                    @map("dietary_habit")
+  birthCityId            Int?                       @map("birth_city_id")
   livingCityId           Int?                       @map("living_city_id")
+  town                   String?
   nativeState            String?                    @map("native_state")
   adminStatus            String                     @default("pending") @map("admin_status")
   profileCompletenessPct Int                        @default(0) @map("profile_completeness_pct")
@@ -143,13 +192,19 @@ model Profile {
   viewsGiven             ProfileView[]              @relation("Viewer")
   country                Country?                   @relation(fields: [countryId], references: [id])
   user                   User                       @relation(fields: [id], references: [id], onDelete: Cascade)
-  livingCity             City?                      @relation(fields: [livingCityId], references: [id])
+  birthCity              City?                      @relation("BirthCity", fields: [birthCityId], references: [id])
+  livingCity             City?                      @relation("LivingCity", fields: [livingCityId], references: [id])
+  gotraMaster            Gotra?                     @relation(fields: [gotraId], references: [id])
+  selectedAakna          AaknaMaster?               @relation(fields: [aaknaId], references: [id])
   shortlisted            Shortlist[]                @relation("ShortlistOwner")
   shortlistedBy          Shortlist[]                @relation("ShortlistedProfile")
+  successStories         SuccessStory[]
 
+  @@index([gotraId], map: "idx_profiles_gotra_id")
   @@index([gender])
   @@index([gotra])
   @@index([height_cm], map: "idx_profiles_height")
+  @@index([birthCityId], map: "idx_profiles_birth_city")
   @@index([livingCityId], map: "idx_profiles_city")
   @@index([maritalStatus], map: "idx_profiles_marital")
   @@index([manglikStatus], map: "idx_profiles_manglik")
@@ -158,41 +213,54 @@ model Profile {
 }
 
 model ProfileEducation {
-  profileId      String  @id @map("profile_id")
-  highestDegree  String? @map("highest_degree")
-  fieldOfStudy   String? @map("field_of_study")
-  institution    String?
-  completionYear Int?    @map("completion_year")
-  profile        Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId         String  @id @map("profile_id")
+  highestDegree     String? @map("highest_degree")
+  fieldOfStudy      String? @map("field_of_study")
+  institution       String?
+  completionYear    Int?    @map("completion_year")
+  educationalDetail String? @map("educational_detail")
+  profile           Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@map("profile_education")
 }
 
 model ProfileOccupation {
-  profileId       String  @id @map("profile_id")
-  occupationType  String? @map("occupation_type")
-  jobTitle        String? @map("job_title")
-  employer        String?
-  annualIncomeMin Int?    @map("annual_income_min")
-  annualIncomeMax Int?    @map("annual_income_max")
-  profile         Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId         String  @id @map("profile_id")
+  occupationType    String? @map("occupation_type")
+  jobTitle          String? @map("job_title")
+  employer          String?
+  occupationDetail  String? @map("occupation_detail")
+  annualIncomeMin   Int?    @map("annual_income_min")
+  annualIncomeMax   Int?    @map("annual_income_max")
+  profile           Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([annualIncomeMin, annualIncomeMax], map: "idx_occupation_income")
   @@map("profile_occupation")
 }
 
 model ProfileFamily {
-  profileId        String  @id @map("profile_id")
-  fatherName       String? @map("father_name")
-  fatherMobile     String? @map("father_mobile")
-  fatherOccupation String? @map("father_occupation")
-  motherName       String? @map("mother_name")
-  motherOccupation String? @map("mother_occupation")
-  siblings         Int?
-  familyType       String? @map("family_type")
-  familyStatus     String? @map("family_status")
-  homeAddress      String? @map("home_address")
-  profile          Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId          String  @id @map("profile_id")
+  fatherName         String? @map("father_name")
+  parentMobile       String? @map("parent_mobile")
+  fatherOccupation   String? @map("father_occupation")
+  motherName         String? @map("mother_name")
+  motherOccupation   String? @map("mother_occupation")
+  siblings           Int?
+  marriedBrothers    Int     @default(0) @map("married_brothers")
+  unmarriedBrothers  Int     @default(0) @map("unmarried_brothers")
+  marriedSisters     Int     @default(0) @map("married_sisters")
+  unmarriedSisters   Int     @default(0) @map("unmarried_sisters")
+  maternalUncleName      String?      @map("maternal_uncle_name")
+  maternalUncleAakna     String?      @map("maternal_uncle_aakna")
+  maternalUncleAaknaId   Int?         @map("maternal_uncle_aakna_id")
+  maternalUncleAaknaMaster AaknaMaster? @relation("MaternalUncleAakna", fields: [maternalUncleAaknaId], references: [id])
+  familyType         String? @map("family_type")
+  familyStatus       String? @map("family_status")
+  hasHouse           String? @map("has_house")
+  hasCar             Boolean @default(false) @map("has_car")
+  homeAddress        String? @map("home_address")
+  permanentAddress   String? @map("permanent_address")
+  profile            Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@map("profile_family")
 }
@@ -203,6 +271,10 @@ model ProfilePartnerPreferences {
   ageMax             Int?     @map("age_max")
   heightMinCm        Int?     @map("height_min_cm")
   heightMaxCm        Int?     @map("height_max_cm")
+  heightMinFt        Int?     @map("height_min_ft")
+  heightMinIn        Int?     @map("height_min_in")
+  heightMaxFt        Int?     @map("height_max_ft")
+  heightMaxIn        Int?     @map("height_max_in")
   maritalStatus      String[] @map("marital_status")
   educationMin       String?  @map("education_min")
   incomeMin          Int?     @map("income_min")
@@ -348,4 +420,32 @@ model PushCampaign {
   recipientCount Int      @default(0) @map("recipient_count")
 
   @@map("push_campaigns")
+}
+
+model SuccessStory {
+  id          String    @id @default(uuid())
+  profileId   String    @map("profile_id")
+  testimonial String
+  photoR2Key  String?   @map("photo_r2_key")
+  status      String    @default("pending")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("success_stories")
+}
+
+model AdminActionLog {
+  id         String   @id @default(uuid())
+  adminId    String   @map("admin_id")
+  action     String
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([adminId])
+  @@map("admin_action_logs")
 }

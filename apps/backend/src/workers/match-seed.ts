@@ -1,4 +1,9 @@
 import { prisma } from '../db/prisma';
+import {
+  EDUCATION_DEGREE_OPTIONS,
+  resolveHeightFtIn,
+  heightToTotalInches,
+} from '@gahoisarthi/shared';
 
 /**
  * Match seed worker — computes scored candidate list for each user.
@@ -20,15 +25,19 @@ import { prisma } from '../db/prisma';
  *  - Income meets minimum: 15pts
  */
 
-const EDUCATION_RANK: Record<string, number> = {
-  'Below 10th': 0,
-  '10th': 1,
-  '12th': 2,
-  'Diploma': 3,
-  'Graduate': 4,
-  'Post Graduate': 5,
-  'Doctorate': 6,
-};
+const EDUCATION_RANK: Record<string, number> = Object.fromEntries(
+  EDUCATION_DEGREE_OPTIONS.map((deg, i) => [deg, i]),
+);
+
+function resolveTotalInches(
+  ft: number | null | undefined,
+  inches: number | null | undefined,
+  cm: number | null | undefined,
+): number | null {
+  const resolved = resolveHeightFtIn(ft, inches, cm);
+  if (resolved.ft == null) return null;
+  return heightToTotalInches(resolved.ft, resolved.in ?? 0);
+}
 
 function scoreMatch(candidate: CandidateProfile, prefs: UserPreferences, userProfile: UserProfile): number {
   let score = 0;
@@ -41,9 +50,12 @@ function scoreMatch(candidate: CandidateProfile, prefs: UserPreferences, userPro
     score += 10; // No preference set = partial credit
   }
 
-  // Height (10 pts)
-  if (prefs.heightMinCm && prefs.heightMaxCm && candidate.height_cm) {
-    if (candidate.height_cm >= prefs.heightMinCm && candidate.height_cm <= prefs.heightMaxCm) score += 10;
+  // Height (10 pts) — prefers ft/in, falls back to legacy cm
+  const candInches = resolveTotalInches(candidate.heightFt, candidate.heightIn, candidate.height_cm);
+  const minInches = resolveTotalInches(prefs.heightMinFt, prefs.heightMinIn, prefs.heightMinCm);
+  const maxInches = resolveTotalInches(prefs.heightMaxFt, prefs.heightMaxIn, prefs.heightMaxCm);
+  if (minInches != null && maxInches != null && candInches != null) {
+    if (candInches >= minInches && candInches <= maxInches) score += 10;
   } else {
     score += 5;
   }
@@ -96,6 +108,8 @@ interface CandidateProfile {
   gender: string | null;
   gotra: string | null;
   maritalStatus: string | null;
+  heightFt: number | null;
+  heightIn: number | null;
   height_cm: number | null;
   age: number | null;
   stateId: number | null;
@@ -117,6 +131,10 @@ interface UserProfile {
 interface UserPreferences {
   ageMin: number | null;
   ageMax: number | null;
+  heightMinFt: number | null;
+  heightMinIn: number | null;
+  heightMaxFt: number | null;
+  heightMaxIn: number | null;
   heightMinCm: number | null;
   heightMaxCm: number | null;
   maritalStatus: string[];
@@ -197,6 +215,10 @@ export async function runMatchSeed(targetUserId?: string) {
     const userPrefs: UserPreferences = {
       ageMin: prefs?.ageMin ?? null,
       ageMax: prefs?.ageMax ?? null,
+      heightMinFt: prefs?.heightMinFt ?? null,
+      heightMinIn: prefs?.heightMinIn ?? null,
+      heightMaxFt: prefs?.heightMaxFt ?? null,
+      heightMaxIn: prefs?.heightMaxIn ?? null,
       heightMinCm: prefs?.heightMinCm ?? null,
       heightMaxCm: prefs?.heightMaxCm ?? null,
       maritalStatus: prefs?.maritalStatus ?? [],
@@ -227,6 +249,8 @@ export async function runMatchSeed(targetUserId?: string) {
           gender: c.gender,
           gotra: c.gotra,
           maritalStatus: c.maritalStatus,
+          heightFt: c.heightFt,
+          heightIn: c.heightIn,
           height_cm: c.height_cm,
           age,
           stateId: c.livingCity?.stateId ?? null,

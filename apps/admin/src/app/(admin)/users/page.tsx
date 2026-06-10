@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Drawer } from '@/components/Drawer';
+import { SuperAdminGuard } from '@/components/SuperAdminGuard';
 import { useToast } from '@/contexts/ToastContext';
 import { apiRequest } from '@/lib/api';
 import { formatDate, formatDateTime, statusBadgeClass } from '@/lib/format';
@@ -90,6 +91,7 @@ export default function UsersPage() {
   };
 
   return (
+    <SuperAdminGuard>
     <>
       <div className="page-header">
         <h2>User Management</h2>
@@ -206,5 +208,6 @@ export default function UsersPage() {
         </Drawer>
       )}
     </>
+    </SuperAdminGuard>
   );
 }

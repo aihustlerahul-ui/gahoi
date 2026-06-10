@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { authGuard, type AuthRequest } from '../../middleware/auth-guard';
 import { getMatchSuggestions } from '../../workers/match-seed';
 import { prisma } from '../../db/prisma';
+import { resolveProfileInternalId } from '../profile/profile.service';
 import { computeAshtakoot } from './kundli.service';
 
 export const matchesRouter = Router();
@@ -26,7 +27,11 @@ matchesRouter.get('/:id/kundli', async (req: AuthRequest, res: Response) => {
     return;
   }
 
-  const targetUserId = req.params.id;
+  const targetUserId = await resolveProfileInternalId(req.params.id);
+  if (!targetUserId) {
+    res.status(404).json({ success: false, data: null, error: 'Profile not found', meta: {} });
+    return;
+  }
   const viewerUserId = req.userId!;
 
   try {

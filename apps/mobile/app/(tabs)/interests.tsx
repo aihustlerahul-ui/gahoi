@@ -148,7 +148,7 @@ export default function InterestsScreen() {
       <View style={styles.card}>
         <TouchableOpacity 
           style={styles.cardBody}
-          onPress={() => router.push(`/profile/${partner.id}`)}
+          onPress={() => router.push(`/profile/${partner.profileId}`)}
         >
           <View style={styles.avatarPlaceholder}>
             <Ionicons name="person" size={28} color="#8A7A60" />
@@ -195,7 +195,7 @@ export default function InterestsScreen() {
           {isAccepted && (
             <TouchableOpacity
               style={[styles.btn, styles.viewBtn]}
-              onPress={() => router.push(`/profile/${partner.id}`)}
+              onPress={() => router.push(`/profile/${partner.profileId}`)}
             >
               <Ionicons name="chatbubbles" size={16} color="#1A0800" style={{ marginRight: 6 }} />
               <Text style={[styles.btnText, { color: '#1A0800' }]}>View Contact / संपर्क देखें</Text>

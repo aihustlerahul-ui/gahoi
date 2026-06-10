@@ -5,33 +5,51 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiRequest } from '@/lib/api';
+import { isSuperAdmin } from '@/lib/roles';
 import type { DashboardStats } from '@/lib/types';
 
-const NAV_ITEMS = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: string;
+  badgeKey?: 'pendingProfiles' | 'pendingPhotos' | 'openReports';
+  superAdminOnly?: boolean;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: '🏠' },
-  { href: '/profiles', label: 'Profiles', icon: '👤', badgeKey: 'pendingProfiles' as const },
-  { href: '/photos', label: 'Photos', icon: '🖼', badgeKey: 'pendingPhotos' as const },
-  { href: '/reports', label: 'Reports', icon: '🚨', badgeKey: 'openReports' as const },
-  { href: '/push', label: 'Push Notifications', icon: '📢' },
-  { href: '/plans', label: 'Subscription Plans', icon: '💳' },
-  { href: '/users', label: 'User Management', icon: '👥' },
-  { href: '/revenue', label: 'Revenue', icon: '💰' },
+  { href: '/profiles', label: 'Profiles', icon: '👤', badgeKey: 'pendingProfiles' },
+  { href: '/photos', label: 'Photos', icon: '🖼', badgeKey: 'pendingPhotos' },
+  { href: '/reports', label: 'Reports', icon: '🚨', badgeKey: 'openReports' },
+  { href: '/interests', label: 'Interests', icon: '💌' },
+  { href: '/success-stories', label: 'Success Stories', icon: '⭐' },
+  { href: '/push', label: 'Push Notifications', icon: '📢', superAdminOnly: true },
+  { href: '/broadcast', label: 'Email Broadcast', icon: '📧', superAdminOnly: true },
+  { href: '/plans', label: 'Subscription Plans', icon: '💳', superAdminOnly: true },
+  { href: '/users', label: 'User Management', icon: '👥', superAdminOnly: true },
+  { href: '/revenue', label: 'Revenue', icon: '💰', superAdminOnly: true },
+  { href: '/admins', label: 'Admin Users', icon: '🔐', superAdminOnly: true },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Dashboard',
-  '/profiles': 'Profile Moderation',
+  '/profiles': 'Profile Management',
   '/photos': 'Photo Moderation',
   '/reports': 'Reports Queue',
+  '/interests': 'Interest Activity',
+  '/success-stories': 'Success Stories',
+  '/broadcast': 'Email Broadcast',
   '/push': 'Push Notifications',
   '/plans': 'Subscription Plans',
   '/users': 'User Management',
   '/revenue': 'Revenue & Payments',
+  '/admins': 'Admin Users',
 };
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { admin, logout } = useAuth();
+  const superAdmin = isSuperAdmin(admin?.role);
   const [badges, setBadges] = useState<Pick<DashboardStats, 'pendingProfiles' | 'pendingPhotos' | 'openReports'>>({
     pendingProfiles: 0,
     pendingPhotos: 0,
@@ -50,7 +68,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       .catch(() => {});
   }, [pathname]);
 
+  const visibleNav = NAV_ITEMS.filter((item) => !item.superAdminOnly || superAdmin);
   const pageTitle = PAGE_TITLES[pathname] ?? 'Admin';
+  const roleLabel = superAdmin ? 'Super Admin' : 'Moderator';
 
   return (
     <div className="admin-shell">
@@ -60,7 +80,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <p>Admin Panel</p>
         </div>
         <nav className="admin-sidebar__nav">
-          {NAV_ITEMS.map((item) => {
+          {visibleNav.map((item) => {
             const isActive = pathname === item.href;
             const badge = item.badgeKey ? badges[item.badgeKey] : 0;
             return (
@@ -82,6 +102,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         <header className="admin-topbar">
           <h1 className="admin-topbar__title">{pageTitle}</h1>
           <div className="admin-topbar__user">
+            <span className="badge badge--blue admin-topbar__role">{roleLabel}</span>
             <span className="admin-topbar__email">{admin?.email}</span>
             <button type="button" className="btn btn--ghost btn--sm" onClick={logout}>
               Logout

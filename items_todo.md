@@ -57,4 +57,12 @@ Items that need founder input or replacement before production. Placeholders are
 
 ---
 
+## Admin UI — 100% completion
+
+Full phased plan with backend + UI tasks, PRD acceptance criteria, and manual test checklist:
+
+→ **`docs/ADMIN_UI_COMPLETION_PLAN.md`**
+
+---
+
 *Last updated: June 2026 — audit session*

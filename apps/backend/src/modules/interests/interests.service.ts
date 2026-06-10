@@ -1,4 +1,5 @@
 import { prisma } from '../../db/prisma';
+import { resolveProfileInternalId } from '../profile/profile.service';
 import { Resend } from 'resend';
 import { sendPushToUser } from '../../lib/push.service';
 import type { SendInterestInput, RespondInterestInput } from './interests.schema';
@@ -48,7 +49,9 @@ async function sendInterestEmail(type: string, receiverEmail: string, senderProf
 // ── Send interest ─────────────────────────────────────────────────────────────
 
 export async function sendInterest(senderId: string, senderTier: string, input: SendInterestInput) {
-  const { receiverId, message } = input;
+  const { message } = input;
+  const receiverId = await resolveProfileInternalId(input.receiverId);
+  if (!receiverId) throw new Error('Profile not found');
 
   if (senderId === receiverId) throw new Error('Cannot send interest to yourself');
 
@@ -229,7 +232,9 @@ export async function listReceivedInterests(userId: string, cursor?: string) {
 
 // ── Shortlist Service ─────────────────────────────────────────────────────────
 
-export async function shortlistProfile(ownerId: string, ownerTier: string, targetId: string) {
+export async function shortlistProfile(ownerId: string, ownerTier: string, targetIdOrPublicId: string) {
+  const targetId = await resolveProfileInternalId(targetIdOrPublicId);
+  if (!targetId) throw new Error('Profile not found');
   if (ownerId === targetId) throw new Error('Cannot shortlist yourself');
 
   // Verify target profile exists
@@ -254,7 +259,9 @@ export async function shortlistProfile(ownerId: string, ownerTier: string, targe
   });
 }
 
-export async function removeShortlist(ownerId: string, targetId: string) {
+export async function removeShortlist(ownerId: string, targetIdOrPublicId: string) {
+  const targetId = await resolveProfileInternalId(targetIdOrPublicId);
+  if (!targetId) throw new Error('Profile not found');
   try {
     return await prisma.shortlist.delete({
       where: {

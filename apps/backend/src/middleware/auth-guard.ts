@@ -50,3 +50,30 @@ export function adminAuthGuard(req: AuthRequest, res: Response, next: NextFuncti
     res.status(401).json({ success: false, data: null, error: 'Token expired or invalid', meta: {} });
   }
 }
+
+/** Normalise role strings: super_admin, SuperAdmin → superadmin */
+function normaliseAdminRole(role: string): string {
+  return role.toLowerCase().replace(/_/g, '');
+}
+
+/**
+ * Restrict route to specific admin roles (e.g. super_admin only).
+ * Must be used after adminAuthGuard.
+ */
+export function requireAdminRole(allowedRoles: string[]) {
+  const allowed = allowedRoles.map(normaliseAdminRole);
+
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    const role = normaliseAdminRole(req.adminRole ?? '');
+    if (!allowed.includes(role)) {
+      res.status(403).json({
+        success: false,
+        data: null,
+        error: 'Forbidden: insufficient admin role',
+        meta: {},
+      });
+      return;
+    }
+    next();
+  };
+}

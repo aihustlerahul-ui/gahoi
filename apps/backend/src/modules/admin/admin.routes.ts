@@ -1,20 +1,35 @@
 import { Router, Response } from 'express';
-import { adminAuthGuard, type AuthRequest } from '../../middleware/auth-guard';
+import { adminAuthGuard, requireAdminRole, type AuthRequest } from '../../middleware/auth-guard';
 import { prisma } from '../../db/prisma';
 import { z } from 'zod';
 import {
   ModerateProfileSchema,
   ModeratePhotoSchema,
   ResolveReportSchema,
+  ListProfilesQuerySchema,
+  ListInterestsQuerySchema,
+  VerifiedBadgeSchema,
+  EmailBroadcastSchema,
+  CreateAdminSchema,
+  UpdateAdminSchema,
+  UpdateSuccessStorySchema,
+  CreateSuccessStorySchema,
 } from './admin.schema';
 import {
-  getPendingProfiles,
+  listProfiles,
+  getAdminProfileById,
   moderateProfile,
+  deleteProfile,
+  toggleProfileVerified,
   getPendingPhotos,
   moderatePhoto,
   getReports,
   resolveReport,
+  listInterests,
+  getInterestAbuseAlerts,
+  sendEmailBroadcast,
   getAnalyticsDashboard,
+  getSignupAnalytics,
   searchUsers,
   updateUserTier,
   updateUserStatus,
@@ -23,27 +38,65 @@ import {
   updatePlan,
   listSubscriptions,
   getRevenueSummary,
+  listAdmins,
+  createAdmin,
+  updateAdmin,
+  deleteAdmin,
+  listSuccessStories,
+  createSuccessStory,
+  updateSuccessStory,
+  deleteSuccessStory,
 } from './admin.service';
 import { sendBroadcast } from '../../lib/push.service';
 import { createPushBannerUploadUrl } from './push-banner.service';
 
 export const adminRouter = Router();
 
-// All admin routes require a valid admin-typed JWT (issued by /v1/admin-auth/verify-otp)
+const superAdminOnly = requireAdminRole(['super_admin', 'SuperAdmin']);
+
 adminRouter.use(adminAuthGuard);
 
-// GET /v1/admin/profiles — list profiles pending moderation
+// ─── Profiles ────────────────────────────────────────────────────────────────
+
 adminRouter.get('/profiles', async (req: AuthRequest, res: Response) => {
+  const parsed = ListProfilesQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
+    return;
+  }
+
   const cursor = req.query.cursor ? atob(req.query.cursor as string) : undefined;
+  const filters = {
+    status: parsed.data.status ?? 'pending',
+    gender: parsed.data.gender,
+    cityId: parsed.data.cityId,
+    tier: parsed.data.tier,
+    verified: parsed.data.verified === 'true' ? true : parsed.data.verified === 'false' ? false : undefined,
+    flagged: parsed.data.flagged === 'true' ? true : parsed.data.flagged === 'false' ? false : undefined,
+    search: parsed.data.search,
+  };
+
   try {
-    const result = await getPendingProfiles(cursor);
+    const result = await listProfiles(filters, cursor);
     res.json({ success: true, data: result.items, error: null, meta: result.meta });
   } catch {
-    res.status(500).json({ success: false, data: null, error: 'Failed to fetch pending profiles', meta: {} });
+    res.status(500).json({ success: false, data: null, error: 'Failed to fetch profiles', meta: {} });
   }
 });
 
-// POST /v1/admin/profiles/:id/moderate — approve, reject, or suspend a profile
+adminRouter.get('/profiles/:id', async (req: AuthRequest, res: Response) => {
+  try {
+    const profile = await getAdminProfileById(req.params.id);
+    if (!profile) {
+      res.status(404).json({ success: false, data: null, error: 'Profile not found', meta: {} });
+      return;
+    }
+    res.json({ success: true, data: profile, error: null, meta: {} });
+  } catch {
+    res.status(500).json({ success: false, data: null, error: 'Failed to fetch profile', meta: {} });
+  }
+});
+
 adminRouter.post('/profiles/:id/moderate', async (req: AuthRequest, res: Response) => {
   const result = ModerateProfileSchema.safeParse(req.body);
   if (!result.success) {
@@ -51,8 +104,18 @@ adminRouter.post('/profiles/:id/moderate', async (req: AuthRequest, res: Respons
     return;
   }
 
+  if (result.data.status === 'rejected' && !result.data.reason) {
+    res.status(400).json({ success: false, data: null, error: 'Reason is required when rejecting a profile', meta: {} });
+    return;
+  }
+
   try {
-    const updated = await moderateProfile(req.params.id, result.data.status);
+    const updated = await moderateProfile(
+      req.params.id,
+      result.data.status,
+      result.data.reason,
+      req.adminId
+    );
     res.json({ success: true, data: updated, error: null, meta: {} });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Failed to moderate profile';
@@ -60,7 +123,34 @@ adminRouter.post('/profiles/:id/moderate', async (req: AuthRequest, res: Respons
   }
 });
 
-// GET /v1/admin/photos — list photos pending moderation
+adminRouter.delete('/profiles/:id', async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await deleteProfile(req.params.id, req.adminId);
+    res.json({ success: true, data: result, error: null, meta: {} });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Failed to delete profile';
+    res.status(400).json({ success: false, data: null, error: msg, meta: {} });
+  }
+});
+
+adminRouter.patch('/profiles/:id/verified', async (req: AuthRequest, res: Response) => {
+  const parsed = VerifiedBadgeSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
+    return;
+  }
+
+  try {
+    const updated = await toggleProfileVerified(req.params.id, parsed.data.isVerified, req.adminId);
+    res.json({ success: true, data: updated, error: null, meta: {} });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Failed to update verification';
+    res.status(400).json({ success: false, data: null, error: msg, meta: {} });
+  }
+});
+
+// ─── Photos ──────────────────────────────────────────────────────────────────
+
 adminRouter.get('/photos', async (req: AuthRequest, res: Response) => {
   const cursor = req.query.cursor ? atob(req.query.cursor as string) : undefined;
   try {
@@ -71,7 +161,6 @@ adminRouter.get('/photos', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// POST /v1/admin/photos/:id/moderate — approve or reject a photo
 adminRouter.post('/photos/:id/moderate', async (req: AuthRequest, res: Response) => {
   const result = ModeratePhotoSchema.safeParse(req.body);
   if (!result.success) {
@@ -88,7 +177,35 @@ adminRouter.post('/photos/:id/moderate', async (req: AuthRequest, res: Response)
   }
 });
 
-// GET /v1/admin/reports — list open profile reports
+// ─── Interests ───────────────────────────────────────────────────────────────
+
+adminRouter.get('/interests', async (req: AuthRequest, res: Response) => {
+  const parsed = ListInterestsQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
+    return;
+  }
+
+  const cursor = req.query.cursor ? atob(req.query.cursor as string) : undefined;
+  try {
+    const result = await listInterests(parsed.data, cursor);
+    res.json({ success: true, data: result.items, error: null, meta: result.meta });
+  } catch {
+    res.status(500).json({ success: false, data: null, error: 'Failed to fetch interests', meta: {} });
+  }
+});
+
+adminRouter.get('/interests/abuse', async (_req: AuthRequest, res: Response) => {
+  try {
+    const alerts = await getInterestAbuseAlerts();
+    res.json({ success: true, data: alerts, error: null, meta: {} });
+  } catch {
+    res.status(500).json({ success: false, data: null, error: 'Failed to fetch abuse alerts', meta: {} });
+  }
+});
+
+// ─── Reports ─────────────────────────────────────────────────────────────────
+
 adminRouter.get('/reports', async (req: AuthRequest, res: Response) => {
   const cursor = req.query.cursor ? atob(req.query.cursor as string) : undefined;
   try {
@@ -99,7 +216,6 @@ adminRouter.get('/reports', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// POST /v1/admin/reports/:id/resolve — resolve a report (with optional user suspension)
 adminRouter.post('/reports/:id/resolve', async (req: AuthRequest, res: Response) => {
   const result = ResolveReportSchema.safeParse(req.body);
   if (!result.success) {
@@ -108,7 +224,7 @@ adminRouter.post('/reports/:id/resolve', async (req: AuthRequest, res: Response)
   }
 
   try {
-    const resolved = await resolveReport(req.params.id, result.data.action);
+    const resolved = await resolveReport(req.params.id, result.data.action, req.adminId);
     res.json({ success: true, data: resolved, error: null, meta: {} });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Failed to resolve report';
@@ -116,8 +232,9 @@ adminRouter.post('/reports/:id/resolve', async (req: AuthRequest, res: Response)
   }
 });
 
-// GET /v1/admin/dashboard — analytics overview for dashboard
-adminRouter.get('/dashboard', async (req: AuthRequest, res: Response) => {
+// ─── Dashboard & Analytics ───────────────────────────────────────────────────
+
+adminRouter.get('/dashboard', async (_req: AuthRequest, res: Response) => {
   try {
     const stats = await getAnalyticsDashboard();
     res.json({ success: true, data: stats, error: null, meta: {} });
@@ -126,12 +243,46 @@ adminRouter.get('/dashboard', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// POST /v1/admin/push/upload-url — presigned R2 upload for push banner images
+adminRouter.get('/analytics/signups', async (req: AuthRequest, res: Response) => {
+  const days = Math.min(90, Math.max(1, Number(req.query.days) || 30));
+  try {
+    const data = await getSignupAnalytics(days);
+    res.json({ success: true, data, error: null, meta: {} });
+  } catch {
+    res.status(500).json({ success: false, data: null, error: 'Failed to fetch signup analytics', meta: {} });
+  }
+});
+
+// ─── Email Broadcast (super_admin only) ──────────────────────────────────────
+
+adminRouter.post('/email/broadcast', superAdminOnly, async (req: AuthRequest, res: Response) => {
+  const parsed = EmailBroadcastSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
+    return;
+  }
+
+  try {
+    const result = await sendEmailBroadcast(
+      parsed.data.segment,
+      parsed.data.subject,
+      parsed.data.bodyHtml,
+      req.adminId
+    );
+    res.json({ success: true, data: result, error: null, meta: {} });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Broadcast failed';
+    res.status(500).json({ success: false, data: null, error: msg, meta: {} });
+  }
+});
+
+// ─── Push (super_admin only) ─────────────────────────────────────────────────
+
 const PushBannerUploadSchema = z.object({
   contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
 });
 
-adminRouter.post('/push/upload-url', async (req: AuthRequest, res: Response) => {
+adminRouter.post('/push/upload-url', superAdminOnly, async (req: AuthRequest, res: Response) => {
   const parsed = PushBannerUploadSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({
@@ -152,7 +303,6 @@ adminRouter.post('/push/upload-url', async (req: AuthRequest, res: Response) => 
   }
 });
 
-// POST /v1/admin/push/broadcast — send a promotional push notification to all users
 const BroadcastSchema = z.object({
   title: z.string().min(1).max(100),
   body: z.string().min(1).max(250),
@@ -160,7 +310,7 @@ const BroadcastSchema = z.object({
   imageUrl: z.string().url().optional().or(z.literal('')),
 });
 
-adminRouter.post('/push/broadcast', async (req: AuthRequest, res: Response) => {
+adminRouter.post('/push/broadcast', superAdminOnly, async (req: AuthRequest, res: Response) => {
   const parsed = BroadcastSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({
@@ -174,8 +324,6 @@ adminRouter.post('/push/broadcast', async (req: AuthRequest, res: Response) => {
 
   try {
     const { title, body, data, imageUrl } = parsed.data;
-
-    // Send to all users with a push token
     const recipientCount = await sendBroadcast({
       title,
       body,
@@ -183,7 +331,6 @@ adminRouter.post('/push/broadcast', async (req: AuthRequest, res: Response) => {
       imageUrl: imageUrl || undefined,
     });
 
-    // Record the campaign
     const campaign = await prisma.pushCampaign.create({
       data: {
         title,
@@ -205,8 +352,7 @@ adminRouter.post('/push/broadcast', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// GET /v1/admin/push/campaigns — list past broadcast campaigns
-adminRouter.get('/push/campaigns', async (_req: AuthRequest, res: Response) => {
+adminRouter.get('/push/campaigns', superAdminOnly, async (_req: AuthRequest, res: Response) => {
   try {
     const campaigns = await prisma.pushCampaign.findMany({
       orderBy: { sentAt: 'desc' },
@@ -218,10 +364,9 @@ adminRouter.get('/push/campaigns', async (_req: AuthRequest, res: Response) => {
   }
 });
 
-// ── User Management ─────────────────────────────────────────────────────────
+// ─── User Management (tier override: super_admin only) ───────────────────────
 
-// GET /v1/admin/users — search + paginate users
-adminRouter.get('/users', async (req: AuthRequest, res: Response) => {
+adminRouter.get('/users', superAdminOnly, async (req: AuthRequest, res: Response) => {
   const search = req.query.search as string | undefined;
   const cursor = req.query.cursor ? atob(req.query.cursor as string) : undefined;
   try {
@@ -232,10 +377,9 @@ adminRouter.get('/users', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// PATCH /v1/admin/users/:id/tier — change user tier (free / paid)
 const UpdateTierSchema = z.object({ tier: z.enum(['free', 'paid']) });
 
-adminRouter.patch('/users/:id/tier', async (req: AuthRequest, res: Response) => {
+adminRouter.patch('/users/:id/tier', superAdminOnly, async (req: AuthRequest, res: Response) => {
   const parsed = UpdateTierSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
@@ -250,10 +394,9 @@ adminRouter.patch('/users/:id/tier', async (req: AuthRequest, res: Response) => 
   }
 });
 
-// PATCH /v1/admin/users/:id/status — suspend or activate a user
 const UpdateStatusSchema = z.object({ status: z.enum(['Active', 'Suspended']) });
 
-adminRouter.patch('/users/:id/status', async (req: AuthRequest, res: Response) => {
+adminRouter.patch('/users/:id/status', superAdminOnly, async (req: AuthRequest, res: Response) => {
   const parsed = UpdateStatusSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
@@ -268,10 +411,9 @@ adminRouter.patch('/users/:id/status', async (req: AuthRequest, res: Response) =
   }
 });
 
-// ── Subscription Plans ───────────────────────────────────────────────────────
+// ─── Subscription Plans (super_admin only) ───────────────────────────────────
 
-// GET /v1/admin/plans — list all plans
-adminRouter.get('/plans', async (_req: AuthRequest, res: Response) => {
+adminRouter.get('/plans', superAdminOnly, async (_req: AuthRequest, res: Response) => {
   try {
     const plans = await listPlans();
     res.json({ success: true, data: plans, error: null, meta: {} });
@@ -280,7 +422,6 @@ adminRouter.get('/plans', async (_req: AuthRequest, res: Response) => {
   }
 });
 
-// POST /v1/admin/plans — create a new plan
 const CreatePlanSchema = z.object({
   name: z.string().min(1),
   nameHi: z.string().min(1),
@@ -288,7 +429,7 @@ const CreatePlanSchema = z.object({
   priceInr: z.number().int().positive(),
 });
 
-adminRouter.post('/plans', async (req: AuthRequest, res: Response) => {
+adminRouter.post('/plans', superAdminOnly, async (req: AuthRequest, res: Response) => {
   const parsed = CreatePlanSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
@@ -303,7 +444,6 @@ adminRouter.post('/plans', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// PATCH /v1/admin/plans/:id — update or toggle a plan
 const UpdatePlanSchema = z.object({
   name: z.string().min(1).optional(),
   nameHi: z.string().min(1).optional(),
@@ -312,7 +452,7 @@ const UpdatePlanSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-adminRouter.patch('/plans/:id', async (req: AuthRequest, res: Response) => {
+adminRouter.patch('/plans/:id', superAdminOnly, async (req: AuthRequest, res: Response) => {
   const parsed = UpdatePlanSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
@@ -327,10 +467,9 @@ adminRouter.patch('/plans/:id', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// ── Revenue & Subscriptions ──────────────────────────────────────────────────
+// ─── Revenue & Subscriptions (super_admin only) ──────────────────────────────
 
-// GET /v1/admin/revenue — summary stats
-adminRouter.get('/revenue', async (_req: AuthRequest, res: Response) => {
+adminRouter.get('/revenue', superAdminOnly, async (_req: AuthRequest, res: Response) => {
   try {
     const summary = await getRevenueSummary();
     res.json({ success: true, data: summary, error: null, meta: {} });
@@ -339,13 +478,117 @@ adminRouter.get('/revenue', async (_req: AuthRequest, res: Response) => {
   }
 });
 
-// GET /v1/admin/subscriptions — paginated subscription history
-adminRouter.get('/subscriptions', async (req: AuthRequest, res: Response) => {
+adminRouter.get('/subscriptions', superAdminOnly, async (req: AuthRequest, res: Response) => {
   const cursor = req.query.cursor ? atob(req.query.cursor as string) : undefined;
+  const expiry = req.query.expiry as 'active' | 'expired' | 'all' | undefined;
   try {
-    const result = await listSubscriptions(cursor);
+    const result = await listSubscriptions(cursor, expiry ?? 'all');
     res.json({ success: true, data: result.items, error: null, meta: result.meta });
   } catch {
     res.status(500).json({ success: false, data: null, error: 'Failed to fetch subscriptions', meta: {} });
+  }
+});
+
+// ─── Admin User CRUD (super_admin only) ──────────────────────────────────────
+
+adminRouter.get('/admins', superAdminOnly, async (_req: AuthRequest, res: Response) => {
+  try {
+    const admins = await listAdmins();
+    res.json({ success: true, data: admins, error: null, meta: {} });
+  } catch {
+    res.status(500).json({ success: false, data: null, error: 'Failed to fetch admins', meta: {} });
+  }
+});
+
+adminRouter.post('/admins', superAdminOnly, async (req: AuthRequest, res: Response) => {
+  const parsed = CreateAdminSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
+    return;
+  }
+  try {
+    const admin = await createAdmin(parsed.data);
+    res.status(201).json({ success: true, data: admin, error: null, meta: {} });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Failed to create admin';
+    res.status(400).json({ success: false, data: null, error: msg, meta: {} });
+  }
+});
+
+adminRouter.patch('/admins/:id', superAdminOnly, async (req: AuthRequest, res: Response) => {
+  const parsed = UpdateAdminSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
+    return;
+  }
+  try {
+    const admin = await updateAdmin(req.params.id, parsed.data);
+    res.json({ success: true, data: admin, error: null, meta: {} });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Failed to update admin';
+    res.status(400).json({ success: false, data: null, error: msg, meta: {} });
+  }
+});
+
+adminRouter.delete('/admins/:id', superAdminOnly, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await deleteAdmin(req.params.id);
+    res.json({ success: true, data: result, error: null, meta: {} });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Failed to deactivate admin';
+    res.status(400).json({ success: false, data: null, error: msg, meta: {} });
+  }
+});
+
+// ─── Success Stories ─────────────────────────────────────────────────────────
+
+adminRouter.get('/success-stories', async (req: AuthRequest, res: Response) => {
+  const status = req.query.status as string | undefined;
+  const cursor = req.query.cursor ? atob(req.query.cursor as string) : undefined;
+  try {
+    const result = await listSuccessStories(status, cursor);
+    res.json({ success: true, data: result.items, error: null, meta: result.meta });
+  } catch {
+    res.status(500).json({ success: false, data: null, error: 'Failed to fetch success stories', meta: {} });
+  }
+});
+
+adminRouter.post('/success-stories', superAdminOnly, async (req: AuthRequest, res: Response) => {
+  const parsed = CreateSuccessStorySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
+    return;
+  }
+  try {
+    const story = await createSuccessStory(parsed.data);
+    res.status(201).json({ success: true, data: story, error: null, meta: {} });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Failed to create success story';
+    res.status(400).json({ success: false, data: null, error: msg, meta: {} });
+  }
+});
+
+adminRouter.patch('/success-stories/:id', superAdminOnly, async (req: AuthRequest, res: Response) => {
+  const parsed = UpdateSuccessStorySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ success: false, data: null, error: parsed.error.errors[0].message, meta: {} });
+    return;
+  }
+  try {
+    const story = await updateSuccessStory(req.params.id, parsed.data, req.adminId);
+    res.json({ success: true, data: story, error: null, meta: {} });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Failed to update success story';
+    res.status(400).json({ success: false, data: null, error: msg, meta: {} });
+  }
+});
+
+adminRouter.delete('/success-stories/:id', superAdminOnly, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await deleteSuccessStory(req.params.id, req.adminId);
+    res.json({ success: true, data: result, error: null, meta: {} });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Failed to delete success story';
+    res.status(400).json({ success: false, data: null, error: msg, meta: {} });
   }
 });

@@ -84,7 +84,7 @@ export default function ProfileViewsScreen() {
         ]
       );
     } else {
-      router.push(`/profile/${item.viewer.id}`);
+      router.push(`/profile/${item.viewer.profileId}`);
     }
   };
 

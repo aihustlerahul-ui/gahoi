@@ -5,7 +5,7 @@ import { Drawer } from '@/components/Drawer';
 import { useToast } from '@/contexts/ToastContext';
 import { apiRequest } from '@/lib/api';
 import { formatDate, formatDateTime } from '@/lib/format';
-import { getNextCursor, type Report } from '@/lib/types';
+import { getNextCursor, type Report, type ReportAction } from '@/lib/types';
 
 export default function ReportsPage() {
   const { showToast } = useToast();
@@ -32,7 +32,7 @@ export default function ReportsPage() {
       .finally(() => setLoading(false));
   }, [loadReports, showToast]);
 
-  const resolve = async (id: string, action: 'resolve_no_action' | 'resolve_suspend_user') => {
+  const resolve = async (id: string, action: ReportAction) => {
     setActing(id);
     try {
       await apiRequest(`/admin/reports/${id}/resolve`, {
@@ -41,7 +41,13 @@ export default function ReportsPage() {
       });
       setReports((prev) => prev.filter((r) => r.id !== id));
       if (selected?.id === id) setSelected(null);
-      showToast(action === 'resolve_suspend_user' ? 'Report resolved — user suspended' : 'Report resolved', 'success');
+      const labels: Record<ReportAction, string> = {
+        warn: 'Warning sent',
+        suspend: 'User suspended',
+        ban: 'User banned',
+        dismiss: 'Report dismissed',
+      };
+      showToast(labels[action], 'success');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Action failed', 'error');
     } finally {
@@ -88,9 +94,9 @@ export default function ReportsPage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Reporter ID</th>
                   <th>Reported Profile</th>
                   <th>Reason</th>
+                  <th>Open Reports</th>
                   <th>Date</th>
                   <th>Actions</th>
                 </tr>
@@ -98,28 +104,21 @@ export default function ReportsPage() {
               <tbody>
                 {reports.map((r) => (
                   <tr key={r.id} className="clickable" onClick={() => setSelected(r)}>
-                    <td><code style={{ fontSize: 12 }}>{r.reporterId.slice(0, 8)}…</code></td>
-                    <td>#{r.reported.profileId} — {r.reported.user.email}</td>
+                    <td>
+                      #{r.reported.profileId} — {r.reported.user.email}
+                      {r.reportedIsFlagged && (
+                        <span className="badge badge--red" style={{ marginLeft: 6 }}>Flagged</span>
+                      )}
+                    </td>
                     <td><span className="badge badge--amber">{r.reasonCode}</span></td>
+                    <td>{r.reportedOpenReportCount ?? '—'}</td>
                     <td>{formatDate(r.createdAt)}</td>
                     <td onClick={(e) => e.stopPropagation()}>
                       <div className="btn-group">
-                        <button
-                          type="button"
-                          className="btn btn--success btn--sm"
-                          disabled={acting === r.id}
-                          onClick={() => resolve(r.id, 'resolve_no_action')}
-                        >
-                          Resolve
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn--danger btn--sm"
-                          disabled={acting === r.id}
-                          onClick={() => resolve(r.id, 'resolve_suspend_user')}
-                        >
-                          Suspend User
-                        </button>
+                        <button type="button" className="btn btn--secondary btn--sm" disabled={acting === r.id} onClick={() => resolve(r.id, 'warn')}>Warn</button>
+                        <button type="button" className="btn btn--danger btn--sm" disabled={acting === r.id} onClick={() => resolve(r.id, 'suspend')}>Suspend</button>
+                        <button type="button" className="btn btn--danger btn--sm" disabled={acting === r.id} onClick={() => resolve(r.id, 'ban')}>Ban</button>
+                        <button type="button" className="btn btn--ghost btn--sm" disabled={acting === r.id} onClick={() => resolve(r.id, 'dismiss')}>Dismiss</button>
                       </div>
                     </td>
                   </tr>
@@ -143,12 +142,10 @@ export default function ReportsPage() {
           onClose={() => setSelected(null)}
           footer={
             <div className="btn-group">
-              <button type="button" className="btn btn--success" disabled={acting === selected.id} onClick={() => resolve(selected.id, 'resolve_no_action')}>
-                Resolve (No Action)
-              </button>
-              <button type="button" className="btn btn--danger" disabled={acting === selected.id} onClick={() => resolve(selected.id, 'resolve_suspend_user')}>
-                Resolve + Suspend
-              </button>
+              <button type="button" className="btn btn--secondary" disabled={acting === selected.id} onClick={() => resolve(selected.id, 'warn')}>Warn</button>
+              <button type="button" className="btn btn--danger" disabled={acting === selected.id} onClick={() => resolve(selected.id, 'suspend')}>Suspend</button>
+              <button type="button" className="btn btn--danger" disabled={acting === selected.id} onClick={() => resolve(selected.id, 'ban')}>Ban</button>
+              <button type="button" className="btn btn--ghost" disabled={acting === selected.id} onClick={() => resolve(selected.id, 'dismiss')}>Dismiss</button>
             </div>
           }
         >
@@ -158,6 +155,7 @@ export default function ReportsPage() {
             <div className="detail-row"><span className="detail-row__label">Reporter ID</span><span className="detail-row__value" style={{ fontSize: 11, wordBreak: 'break-all' }}>{selected.reporterId}</span></div>
             <div className="detail-row"><span className="detail-row__label">Reported Profile</span><span className="detail-row__value">#{selected.reported.profileId}</span></div>
             <div className="detail-row"><span className="detail-row__label">Reported Email</span><span className="detail-row__value">{selected.reported.user.email}</span></div>
+            <div className="detail-row"><span className="detail-row__label">Open Reports on Profile</span><span className="detail-row__value">{selected.reportedOpenReportCount ?? 0}</span></div>
             <div className="detail-row"><span className="detail-row__label">Submitted</span><span className="detail-row__value">{formatDateTime(selected.createdAt)}</span></div>
           </div>
           {selected.detail && (

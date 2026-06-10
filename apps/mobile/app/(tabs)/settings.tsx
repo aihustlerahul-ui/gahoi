@@ -8,7 +8,10 @@ import {
   Alert,
   ScrollView,
   Platform,
+  Share,
+  TextInput,
 } from 'react-native';
+import { buildProfileShareText, formatProfileIdLabel, parsePublicProfileId } from '@gahoisarthi/shared';
 import { useAuth } from '../../src/lib/auth';
 import { apiRequest } from '../../src/lib/api';
 import { changeLanguage } from '../../src/lib/i18n';
@@ -22,6 +25,7 @@ export default function SettingsScreen() {
   const { userProfile, logoutUser, refreshProfile } = useAuth();
   const [updatingLang, setUpdatingLang] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [lookupId, setLookupId] = useState('');
 
   const currentLang = i18n.language || 'en';
 
@@ -118,6 +122,28 @@ export default function SettingsScreen() {
   }
 
   const isPremium = userProfile?.user?.tier === 'paid';
+  const publicProfileId = userProfile?.profileId;
+
+  const handleShareProfileId = async () => {
+    if (!publicProfileId) return;
+    try {
+      await Share.share({ message: buildProfileShareText(publicProfileId) });
+    } catch {
+      Alert.alert('Error', 'Could not open share sheet');
+    }
+  };
+
+  const handleLookupProfile = () => {
+    const parsed = parsePublicProfileId(lookupId);
+    if (parsed === null) {
+      Alert.alert(
+        currentLang === 'hi' ? 'अमान्य ID' : 'Invalid ID',
+        currentLang === 'hi' ? 'कृपया मान्य प्रोफ़ाइल ID दर्ज करें (जैसे 23432)' : 'Enter a valid profile ID (e.g. 23432 or GS-23432)'
+      );
+      return;
+    }
+    router.push(`/profile/${parsed}`);
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -128,8 +154,15 @@ export default function SettingsScreen() {
         </View>
         <View style={styles.profileDetails}>
           <Text style={styles.profileId}>
-            {userProfile ? `GS-${userProfile.profileId}` : 'Gahoi Member'}
+            {publicProfileId ? formatProfileIdLabel(publicProfileId) : 'Gahoi Member'}
           </Text>
+          {publicProfileId != null && (
+            <Text style={styles.profileIdHint}>
+              {currentLang === 'hi'
+                ? `शेयर करें: ${publicProfileId} — दूसरे सदस्य इस ID से आपकी प्रोफ़ाइल खोज सकते हैं`
+                : `Share ID: ${publicProfileId} — others can find your profile with this number`}
+            </Text>
+          )}
           <Text style={styles.profileEmail}>{userProfile?.user?.email || ''}</Text>
           <View style={[styles.tierBadge, isPremium ? styles.premiumBadge : styles.freeBadge]}>
             <Ionicons name={isPremium ? 'shield-checkmark' : 'shield-outline'} size={14} color={isPremium ? '#1A0800' : '#D4BFA0'} />
@@ -138,6 +171,45 @@ export default function SettingsScreen() {
             </Text>
           </View>
         </View>
+      </View>
+
+      {publicProfileId != null && (
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>
+            {currentLang === 'hi' ? 'प्रोफ़ाइल ID' : 'Profile ID'}
+          </Text>
+          <TouchableOpacity style={styles.menuItem} onPress={handleShareProfileId}>
+            <Ionicons name="share-outline" size={22} color="#E8B84B" />
+            <Text style={styles.menuText}>
+              {currentLang === 'hi' ? 'प्रोफ़ाइल ID शेयर करें' : 'Share Profile ID'}
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color="#8A7A60" />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>
+          {currentLang === 'hi' ? 'प्रोफ़ाइल खोजें' : 'Find Profile'}
+        </Text>
+        <Text style={styles.lookupHint}>
+          {currentLang === 'hi'
+            ? 'किसी का प्रोफ़ाइल ID दर्ज करें (जैसे 23432)'
+            : 'Enter someone\'s profile ID (e.g. 23432 or GS-23432)'}
+        </Text>
+        <TextInput
+          style={styles.lookupInput}
+          value={lookupId}
+          onChangeText={setLookupId}
+          keyboardType="number-pad"
+          placeholder="23432"
+          placeholderTextColor="#8A7A60"
+        />
+        <TouchableOpacity style={styles.lookupButton} onPress={handleLookupProfile}>
+          <Text style={styles.lookupButtonText}>
+            {currentLang === 'hi' ? 'प्रोफ़ाइल देखें' : 'View Profile'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Language Section */}
@@ -278,6 +350,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
+  profileIdHint: {
+    color: '#8A7A60',
+    fontSize: 12,
+    marginTop: 6,
+    lineHeight: 18,
+  },
   profileEmail: {
     color: '#8A7A60',
     fontSize: 14,
@@ -368,6 +446,34 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     marginLeft: 12,
+    flex: 1,
+  },
+  lookupHint: {
+    color: '#8A7A60',
+    fontSize: 13,
+    marginBottom: 10,
+  },
+  lookupInput: {
+    backgroundColor: '#2C1A10',
+    color: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#3D281C',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  lookupButton: {
+    backgroundColor: '#E8B84B',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  lookupButtonText: {
+    color: '#1A0800',
+    fontSize: 15,
+    fontWeight: '700',
   },
   logoutButton: {
     flexDirection: 'row',

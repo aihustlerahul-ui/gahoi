@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { Modal } from '@/components/Modal';
+import { SuperAdminGuard } from '@/components/SuperAdminGuard';
 import { useToast } from '@/contexts/ToastContext';
 import { apiRequest } from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -107,6 +108,7 @@ export default function PlansPage() {
   }
 
   return (
+    <SuperAdminGuard>
     <>
       <div className="page-header flex-between">
         <div>
@@ -205,5 +207,6 @@ export default function PlansPage() {
         </Modal>
       )}
     </>
+    </SuperAdminGuard>
   );
 }

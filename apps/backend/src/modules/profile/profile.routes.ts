@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { rateLimit } from 'express-rate-limit';
+import { GAHOI_NAKSHATRA_MASTER, GAHOI_ZODIAC_MASTER } from '@gahoisarthi/shared';
 import { authGuard, type AuthRequest } from '../../middleware/auth-guard';
 import {
   UpdateProfileSchema,
@@ -16,6 +17,7 @@ import {
   upsertFamily,
   upsertPreferences,
   getProfileById,
+  resolveProfileInternalId,
   deleteProfile,
   getProfileViews,
 } from './profile.service';
@@ -24,22 +26,104 @@ import { prisma } from '../../db/prisma';
 
 export const profileRouter = Router();
 
-// GET /v1/profile/metadata/gotras — public
+// GET /v1/profile/metadata/aaknas — public (full Gahoi Samaj master list)
+profileRouter.get('/metadata/aaknas', async (_req, res) => {
+  try {
+    const aaknas = await prisma.aaknaMaster.findMany({
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    });
+    res.json({ success: true, data: aaknas, error: null, meta: {} });
+  } catch {
+    res.status(500).json({ success: false, data: null, error: 'Failed to fetch aaknas', meta: {} });
+  }
+});
+
+// GET /v1/profile/metadata/nakshatras — public (authoritative Gahoi master list)
+profileRouter.get('/metadata/nakshatras', async (_req, res) => {
+  res.json({ success: true, data: GAHOI_NAKSHATRA_MASTER, error: null, meta: {} });
+});
+
+// GET /v1/profile/metadata/zodiac — public (authoritative Gahoi master list)
+profileRouter.get('/metadata/zodiac', async (_req, res) => {
+  res.json({ success: true, data: GAHOI_ZODIAC_MASTER, error: null, meta: {} });
+});
+
+// GET /v1/profile/metadata/countries — public
+profileRouter.get('/metadata/countries', async (_req, res) => {
+  try {
+    const countries = await prisma.country.findMany({
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, iso2: true },
+    });
+    res.json({ success: true, data: countries, error: null, meta: {} });
+  } catch {
+    res.status(500).json({ success: false, data: null, error: 'Failed to fetch countries', meta: {} });
+  }
+});
+
+// GET /v1/profile/metadata/states?countryId= — public
+profileRouter.get('/metadata/states', async (req, res) => {
+  const countryId = Number(req.query.countryId);
+  if (!countryId || Number.isNaN(countryId)) {
+    res.status(400).json({ success: false, data: null, error: 'countryId is required', meta: {} });
+    return;
+  }
+  try {
+    const states = await prisma.state.findMany({
+      where: { countryId },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, countryId: true },
+    });
+    res.json({ success: true, data: states, error: null, meta: {} });
+  } catch {
+    res.status(500).json({ success: false, data: null, error: 'Failed to fetch states', meta: {} });
+  }
+});
+
+// GET /v1/profile/metadata/gotras — public (includes aaknas per gotra)
 profileRouter.get('/metadata/gotras', async (_req, res) => {
   try {
-    const gotras = await prisma.gotra.findMany({ orderBy: { name: 'asc' } });
-    res.json({ success: true, data: gotras, error: null, meta: {} });
+    const gotras = await prisma.gotra.findMany({
+      orderBy: { gotraEnglish: 'asc' },
+      include: {
+        aaknaLinks: {
+          orderBy: { aakna: { name: 'asc' } },
+          include: {
+            aakna: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
+    const data = gotras.map((g) => ({
+      id: g.id,
+      key: g.key,
+      name: g.name,
+      label: g.name,
+      gotraHindi: g.gotraHindi,
+      gotraEnglish: g.gotraEnglish,
+      rishi: g.rishi,
+      kuldevi: g.kuldevi,
+      aaknas: g.aaknaLinks.map((link) => link.aakna),
+    }));
+    res.json({ success: true, data, error: null, meta: {} });
   } catch {
     res.status(500).json({ success: false, data: null, error: 'Failed to fetch gotras', meta: {} });
   }
 });
 
-// GET /v1/profile/metadata/cities — public
-profileRouter.get('/metadata/cities', async (_req, res) => {
+// GET /v1/profile/metadata/cities?stateId= — public (cascading); omit stateId for all cities
+profileRouter.get('/metadata/cities', async (req, res) => {
+  const stateId = req.query.stateId ? Number(req.query.stateId) : undefined;
+  if (req.query.stateId && (!stateId || Number.isNaN(stateId))) {
+    res.status(400).json({ success: false, data: null, error: 'Invalid stateId', meta: {} });
+    return;
+  }
   try {
     const cities = await prisma.city.findMany({
+      where: stateId ? { stateId } : undefined,
       orderBy: { name: 'asc' },
-      include: { state: { select: { name: true } } }
+      include: { state: { select: { id: true, name: true, countryId: true } } },
     });
     res.json({ success: true, data: cities, error: null, meta: {} });
   } catch {
@@ -175,11 +259,39 @@ profileRouter.patch('/me/preferences', async (req: AuthRequest, res: Response) =
   }
 });
 
-// GET /v1/profile/:id
-profileRouter.get('/:id', profileViewLimiter, async (req: AuthRequest, res: Response) => {
-  const targetId = req.params.id;
+// GET /v1/profile/lookup/:publicId — resolve shareable numeric ID (auth required)
+profileRouter.get('/lookup/:publicId', profileViewLimiter, async (req: AuthRequest, res: Response) => {
   try {
-    const profile = await getProfileById(req.userId!, req.userTier ?? 'free', targetId);
+    const internalId = await resolveProfileInternalId(req.params.publicId);
+    if (!internalId) {
+      res.status(404).json({ success: false, data: null, error: 'Profile not found', meta: {} });
+      return;
+    }
+    const profile = await getProfileById(req.userId!, req.userTier ?? 'free', internalId);
+    if (!profile) {
+      res.status(404).json({ success: false, data: null, error: 'Profile not found', meta: {} });
+      return;
+    }
+    res.json({ success: true, data: profile, error: null, meta: {} });
+  } catch {
+    res.status(500).json({ success: false, data: null, error: 'Failed to lookup profile', meta: {} });
+  }
+});
+
+// GET /v1/profile/:id — UUID or public numeric ID (e.g. 23432, GS-23432)
+profileRouter.get('/:id', profileViewLimiter, async (req: AuthRequest, res: Response) => {
+  const targetParam = req.params.id;
+  if (targetParam === 'me' || targetParam === 'metadata') {
+    res.status(404).json({ success: false, data: null, error: 'Not found', meta: {} });
+    return;
+  }
+  try {
+    const internalId = await resolveProfileInternalId(targetParam);
+    if (!internalId) {
+      res.status(404).json({ success: false, data: null, error: 'Profile not found', meta: {} });
+      return;
+    }
+    const profile = await getProfileById(req.userId!, req.userTier ?? 'free', internalId);
     if (!profile) {
       res.status(404).json({ success: false, data: null, error: 'Profile not found', meta: {} });
       return;
@@ -189,8 +301,8 @@ profileRouter.get('/:id', profileViewLimiter, async (req: AuthRequest, res: Resp
     const interest = await prisma.interest.findFirst({
       where: {
         OR: [
-          { senderId: req.userId!, receiverId: targetId },
-          { senderId: targetId, receiverId: req.userId! },
+          { senderId: req.userId!, receiverId: internalId },
+          { senderId: internalId, receiverId: req.userId! },
         ],
       },
     });

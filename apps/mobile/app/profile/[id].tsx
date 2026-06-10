@@ -15,6 +15,7 @@ import { apiRequest } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { nakshatraLabelForEnglish, zodiacLabelForEnglish, formatHeightFtIn, resolveHeightFtIn } from '@gahoisarthi/shared';
 
 interface KundliScore {
   total: number;
@@ -29,6 +30,42 @@ interface KundliScore {
   label: 'Uttam' | 'Madhyam' | 'Vichar Yogya';
   is_approximate: boolean;
 }
+
+const getBilingualValue = (field: string, val: any) => {
+  if (val === undefined || val === null || val === '') return 'Not Filled / नहीं भरा';
+  const str = String(val).trim();
+  
+  if (field === 'gender') {
+    if (str === 'Male') return 'Male / लड़का';
+    if (str === 'Female') return 'Female / लड़की';
+  }
+  if (field === 'maritalStatus') {
+    if (str === 'Never Married') return 'Never Married / अविवाहित';
+    if (str === 'Divorced') return 'Divorced / तलाकशुदा';
+    if (str === 'Widowed') return 'Widowed / विधवा/विधुर';
+    if (str === 'Awaiting Divorce') return 'Awaiting Divorce / तलाक की प्रतीक्षा में';
+  }
+  if (field === 'dietaryHabit') {
+    if (str === 'Veg') return 'Veg / शाकाहारी';
+    if (str === 'Non-Veg') return 'Non-Veg / मांसाहारी';
+    if (str === 'Eggetarian') return 'Eggetarian / अंडाहारी';
+    if (str === 'Vegan') return 'Vegan / शाकाहारी (पूर्ण)';
+  }
+  if (field === 'disability') {
+    if (str === 'No') return 'No / नहीं';
+    if (str === 'Yes') return 'Yes / हाँ';
+  }
+  if (field === 'hasHouse') {
+    if (str === 'Yes Personal') return 'Yes Personal / हाँ निजी';
+    if (str === 'Yes Rented') return 'Yes Rented / हाँ किराए का';
+    if (str === 'No') return 'No / नहीं';
+  }
+  if (field === 'hasCar') {
+    if (val === true || str === 'true' || str === 'Yes') return 'Yes / हाँ';
+    return 'No / नहीं';
+  }
+  return val;
+};
 
 export default function ProfileDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -50,13 +87,12 @@ export default function ProfileDetailScreen() {
 
   const fetchProfileAndShortlist = async () => {
     try {
-      // 1. Fetch Profile Details
       const profileRes = await apiRequest(`/profile/${id}`);
       if (profileRes.success && profileRes.data) {
         const p = profileRes.data;
         setProfile(p);
+        const targetUuid = p.id as string;
 
-        // Process interest relationship returned from backend
         if (p.interest) {
           setInterestId(p.interest.id);
           if (p.interest.status === 'accepted') {
@@ -64,7 +100,7 @@ export default function ProfileDetailScreen() {
           } else if (p.interest.status === 'declined') {
             setInterestStatus('declined');
           } else if (p.interest.status === 'pending') {
-            if (p.interest.senderId === userProfile.id) {
+            if (p.interest.senderId === userProfile?.id) {
               setInterestStatus('pending_sent');
             } else {
               setInterestStatus('pending_received');
@@ -74,13 +110,12 @@ export default function ProfileDetailScreen() {
           setInterestStatus('none');
           setInterestId(null);
         }
-      }
 
-      // 2. Fetch shortlist to check if shortlisted
-      const shortlistRes = await apiRequest('/shortlist');
-      if (shortlistRes.success && shortlistRes.data) {
-        const exists = shortlistRes.data.some((item: any) => item.id === id);
-        setIsShortlisted(exists);
+        const shortlistRes = await apiRequest('/shortlist');
+        if (shortlistRes.success && shortlistRes.data) {
+          const exists = shortlistRes.data.some((item: any) => item.id === targetUuid);
+          setIsShortlisted(exists);
+        }
       }
     } catch (err: any) {
       console.warn('Error fetching profile details:', err.message);
@@ -91,10 +126,10 @@ export default function ProfileDetailScreen() {
   };
 
   const fetchKundli = async () => {
-    if (!isPremium) return;
+    if (!isPremium || !profile?.id) return;
     setLoadingKundli(true);
     try {
-      const res = await apiRequest(`/matches/${id}/kundli`);
+      const res = await apiRequest(`/matches/${profile.id}/kundli`);
       if (res.success && res.data) {
         setKundli(res.data);
       }
@@ -118,16 +153,17 @@ export default function ProfileDetailScreen() {
   }, [id, profile, isPremium]);
 
   const handleShortlistToggle = async () => {
+    if (!profile?.id) return;
     setActionLoading(true);
     try {
       if (isShortlisted) {
-        const res = await apiRequest(`/shortlist/${id}`, { method: 'DELETE' });
+        const res = await apiRequest(`/shortlist/${profile.id}`, { method: 'DELETE' });
         if (res.success) {
           setIsShortlisted(false);
           Alert.alert(t('common.success', 'Success'), currentLang === 'hi' ? 'शॉर्टलिस्ट से हटाया गया।' : 'Removed from Shortlist.');
         }
       } else {
-        const res = await apiRequest(`/shortlist/${id}`, { method: 'POST' });
+        const res = await apiRequest(`/shortlist/${profile.id}`, { method: 'POST' });
         if (res.success) {
           setIsShortlisted(true);
           Alert.alert(t('common.success', 'Success'), currentLang === 'hi' ? 'शॉर्टलिस्ट में जोड़ा गया।' : 'Added to Shortlist.');
@@ -141,11 +177,12 @@ export default function ProfileDetailScreen() {
   };
 
   const handleSendInterest = async () => {
+    if (!profile?.id) return;
     setActionLoading(true);
     try {
       const res = await apiRequest('/interests', {
         method: 'POST',
-        body: JSON.stringify({ receiverId: id }),
+        body: JSON.stringify({ receiverId: profile.id }),
       });
       if (res.success && res.data) {
         setInterestStatus('pending_sent');
@@ -231,6 +268,12 @@ export default function ProfileDetailScreen() {
   // Get primary photo
   const primaryPhoto = profile.gallery && profile.gallery.length > 0 ? profile.gallery[0].signedUrl : null;
 
+  const resolvedHeight = resolveHeightFtIn(profile.heightFt, profile.heightIn, profile.height_cm);
+  const heightLabel =
+    profile.heightDisplay ||
+    formatHeightFtIn(resolvedHeight.ft, resolvedHeight.in) ||
+    (profile.height_cm ? `${profile.height_cm} cm` : '—');
+
   const renderKundliLabel = (lbl: 'Uttam' | 'Madhyam' | 'Vichar Yogya') => {
     if (lbl === 'Uttam') return currentLang === 'hi' ? 'उत्तम / Uttam' : 'Uttam';
     if (lbl === 'Madhyam') return currentLang === 'hi' ? 'मध्यम / Madhyam' : 'Madhyam';
@@ -295,7 +338,7 @@ export default function ProfileDetailScreen() {
             )}
           </View>
           <Text style={styles.quickInfo}>
-            {profile.age} yrs • {profile.height_cm} cm • {profile.maritalStatus}
+            {profile.age} yrs • {heightLabel} • {profile.maritalStatus}
           </Text>
           <Text style={styles.quickSubInfo}>
             Gotra: {profile.gotra} • {profile.city || 'City'}
@@ -395,7 +438,7 @@ export default function ProfileDetailScreen() {
                   </Text>
                   <View
                     style={[
-                      styles.kundliLabelBadge,
+                     styles.kundliLabelBadge,
                       kundli.label === 'Uttam'
                         ? styles.labelUttam
                         : kundli.label === 'Madhyam'
@@ -469,172 +512,280 @@ export default function ProfileDetailScreen() {
           </View>
         )}
 
-        {/* Basic Details */}
+        {/* Personal Details */}
         <View style={styles.detailSection}>
           <Text style={styles.sectionTitle}>
-            {currentLang === 'hi' ? 'मूल जानकारी' : 'Basic Details'}
+            {currentLang === 'hi' ? 'व्यक्तिगत विवरण / Personal Details' : 'Personal Details'}
           </Text>
           <View style={styles.detailsList}>
-            {profile.aboutMe && (
-              <View style={styles.aboutContainer}>
-                <Text style={styles.aboutHeader}>{currentLang === 'hi' ? 'मेरे बारे में / About Me' : 'About Me'}</Text>
-                <Text style={styles.aboutText}>{profile.aboutMe}</Text>
-              </View>
-            )}
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Gender / लिंग</Text>
-              <Text style={styles.detailValue}>{profile.gender}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Age / आयु</Text>
-              <Text style={styles.detailValue}>{profile.age} yrs</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Height / ऊँचाई</Text>
-              <Text style={styles.detailValue}>{profile.height_cm} cm</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Gotra / गोत्र</Text>
-              <Text style={styles.detailValue}>{profile.gotra}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Complexion / रंग</Text>
-              <Text style={styles.detailValue}>{profile.complexion || '-'}</Text>
+              <Text style={styles.detailLabel}>Name / नाम</Text>
+              <Text style={styles.detailValue}>
+                {profile.fullName || [profile.firstName, profile.lastName].filter(Boolean).join(' ') || '-'}
+              </Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Marital Status / वैवाहिक स्थिति</Text>
-              <Text style={styles.detailValue}>{profile.maritalStatus}</Text>
+              <Text style={styles.detailValue}>{getBilingualValue('maritalStatus', profile.maritalStatus)}</Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Manglik Status / मांगलिक स्थिति</Text>
-              <Text style={styles.detailValue}>{profile.manglikStatus}</Text>
+              <Text style={styles.detailLabel}>Gender / लिंग</Text>
+              <Text style={styles.detailValue}>{getBilingualValue('gender', profile.gender)}</Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Mobile / मोबाइल</Text>
+              <Text style={styles.detailLabel}>Complexion / Color / रंग</Text>
+              <Text style={styles.detailValue}>{profile.complexion || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Height / ऊँचाई</Text>
               <Text style={styles.detailValue}>
-                {profile.mobile ? profile.mobile : 'Locked / लॉक है'}
+                {heightLabel}{profile.height_cm ? ` - ${profile.height_cm} Cm` : ''}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Weight / वजन</Text>
+              <Text style={styles.detailValue}>
+                {profile.weightKg ? `${profile.weightKg} kg` : (currentLang === 'hi' ? 'नहीं भरा गया' : 'Not Filled')}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Diet / आहार</Text>
+              <Text style={styles.detailValue}>{getBilingualValue('dietaryHabit', profile.dietaryHabit)}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Disability / विकलांगता</Text>
+              <Text style={styles.detailValue}>{getBilingualValue('disability', profile.disability)}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Blood Group / रक्त समूह</Text>
+              <Text style={styles.detailValue}>{profile.bloodGroup || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Profile Created By / प्रोफ़ाइल किसने बनाई</Text>
+              <Text style={styles.detailValue}>{profile.profileCreatedBy || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Country / देश</Text>
+              <Text style={styles.detailValue}>{profile.country || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>State / राज्य</Text>
+              <Text style={styles.detailValue}>{profile.state || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>City / शहर</Text>
+              <Text style={styles.detailValue}>{profile.city || '-'}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Contact Details */}
+        <View style={styles.detailSection}>
+          <Text style={styles.sectionTitle}>
+            {currentLang === 'hi' ? 'संपर्क विवरण / Contact Details' : 'Contact Details'}
+          </Text>
+          <View style={styles.detailsList}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Mobile Number / मोबाइल</Text>
+              <Text style={styles.detailValue}>
+                {profile.mobile ? profile.mobile : (currentLang === 'hi' ? 'लॉक है' : 'Locked')}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Father Contact No / अभिभावक का संपर्क</Text>
+              <Text style={styles.detailValue}>
+                {profile.parentMobile ? profile.parentMobile : (profile.family?.parentMobile ? profile.family.parentMobile : (currentLang === 'hi' ? 'लॉक है' : 'Locked'))}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Whatsapp Mobile No / व्हाट्सएप</Text>
+              <Text style={styles.detailValue}>
+                {profile.whatsapp ? profile.whatsapp : (currentLang === 'hi' ? 'लॉक है' : 'Locked')}
               </Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Email / ईमेल</Text>
               <Text style={styles.detailValue}>
-                {profile.email ? profile.email : 'Locked / लॉक है'}
+                {profile.email ? profile.email : (currentLang === 'hi' ? 'लॉक है' : 'Locked')}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Present Address / वर्तमान पता</Text>
+              <Text style={styles.detailValue}>
+                {profile.homeAddress ? profile.homeAddress : (profile.family?.homeAddress || (currentLang === 'hi' ? 'लॉक है' : 'Locked'))}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Permanent Address / स्थायी पता</Text>
+              <Text style={styles.detailValue}>
+                {profile.permanentAddress ? profile.permanentAddress : (profile.family?.permanentAddress || (currentLang === 'hi' ? 'लॉक है' : 'Locked'))}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Education Details */}
+        {/* Religious Details */}
         <View style={styles.detailSection}>
           <Text style={styles.sectionTitle}>
-            {currentLang === 'hi' ? 'शिक्षा' : 'Education Details'}
+            {currentLang === 'hi' ? 'धार्मिक विवरण / Religious Details' : 'Religious Details'}
           </Text>
           <View style={styles.detailsList}>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Highest Degree / उच्चतम डिग्री</Text>
+              <Text style={styles.detailLabel}>Gotra / गोत्र</Text>
+              <Text style={styles.detailValue}>{profile.gotra || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Aakna / आकना</Text>
+              <Text style={styles.detailValue}>{profile.aakna || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Mother Tongue / मातृभाषा</Text>
+              <Text style={styles.detailValue}>{profile.motherTongue || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Date Of Birth / जन्म तिथि</Text>
+              <Text style={styles.detailValue}>
+                {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString(currentLang === 'hi' ? 'hi-IN' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-') : '-'}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Time Of Birth / जन्म समय</Text>
+              <Text style={styles.detailValue}>{profile.timeOfBirth || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Place Of Birth / जन्म स्थान</Text>
+              <Text style={styles.detailValue}>
+                {profile.birthCity ? (profile.birthCity + (profile.birthState ? `, ${profile.birthState}` : '')) : (profile.placeOfBirth || '-')}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Zodiac / राशि</Text>
+              <Text style={styles.detailValue}>{profile.zodiac ? zodiacLabelForEnglish(profile.zodiac) : '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Manglik Status / मांगलिक स्थिति</Text>
+              <Text style={styles.detailValue}>{profile.manglikStatus || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Nakshatra / नक्षत्र</Text>
+              <Text style={styles.detailValue}>{profile.nakshatra ? nakshatraLabelForEnglish(profile.nakshatra) : '-'}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Career Details */}
+        <View style={styles.detailSection}>
+          <Text style={styles.sectionTitle}>
+            {currentLang === 'hi' ? 'करियर विवरण / Career Details' : 'Career Details'}
+          </Text>
+          <View style={styles.detailsList}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Education / शिक्षा</Text>
               <Text style={styles.detailValue}>
                 {profile.education?.highestDegree || profile.education || '-'}
               </Text>
             </View>
-            {profile.education?.fieldOfStudy && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Field of Study / अध्ययन का क्षेत्र</Text>
-                <Text style={styles.detailValue}>{profile.education.fieldOfStudy}</Text>
-              </View>
-            )}
-            {profile.education?.institution && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Institution / संस्थान</Text>
-                <Text style={styles.detailValue}>{profile.education.institution}</Text>
-              </View>
-            )}
-            {profile.education?.completionYear && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Completion Year / वर्ष</Text>
-                <Text style={styles.detailValue}>{profile.education.completionYear}</Text>
-              </View>
-            )}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Education Detail / शिक्षा का विवरण</Text>
+              <Text style={styles.detailValue}>
+                {[profile.education?.institution, profile.education?.fieldOfStudy].filter(Boolean).join(', ') || profile.education?.educationalDetail || '-'}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Profession / व्यवसाय</Text>
+              <Text style={styles.detailValue}>{profile.occupation?.jobTitle || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Occupation / व्यवसाय प्रकार</Text>
+              <Text style={styles.detailValue}>{profile.occupation?.type || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Occupation Detail / व्यवसाय का विवरण</Text>
+              <Text style={styles.detailValue}>
+                {[profile.occupation?.employer, profile.occupation?.occupationDetail].filter(Boolean).join(', ') || '-'}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Annual Income / वार्षिक आय</Text>
+              <Text style={styles.detailValue}>
+                {profile.occupation?.annualIncomeMin 
+                  ? `₹${(profile.occupation.annualIncomeMin / 100000).toFixed(1)} - ${(profile.occupation.annualIncomeMax ? profile.occupation.annualIncomeMax / 100000 : 999).toFixed(1)} Lakh` 
+                  : '-'}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Occupation Details */}
+        {/* About Myself Section */}
         <View style={styles.detailSection}>
           <Text style={styles.sectionTitle}>
-            {currentLang === 'hi' ? 'व्यवसाय' : 'Occupation Details'}
+            {currentLang === 'hi' ? 'मेरे बारे में / About Myself' : 'About Myself'}
           </Text>
           <View style={styles.detailsList}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Occupation / व्यवसाय</Text>
-              <Text style={styles.detailValue}>
-                {profile.occupation?.type || profile.occupation || '-'}
-              </Text>
+            <View style={[styles.aboutContainer, { borderBottomWidth: 0, paddingBottom: 0, marginBottom: 0 }]}>
+              <Text style={styles.aboutHeader}>{currentLang === 'hi' ? 'स्वयं के बारे में / Myself' : 'Myself'}</Text>
+              <Text style={styles.aboutText}>{profile.aboutMe || (currentLang === 'hi' ? 'नहीं भरा गया' : 'Not Filled')}</Text>
             </View>
-            {profile.occupation?.jobTitle && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Job Title / पद</Text>
-                <Text style={styles.detailValue}>{profile.occupation.jobTitle}</Text>
-              </View>
-            )}
-            {profile.occupation?.employer && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Employer / नियोक्ता</Text>
-                <Text style={styles.detailValue}>{profile.occupation.employer}</Text>
-              </View>
-            )}
-            {profile.occupation?.annualIncomeMin !== undefined && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Annual Income / वार्षिक आय</Text>
-                <Text style={styles.detailValue}>
-                  {profile.occupation.annualIncomeMin 
-                    ? `₹${(profile.occupation.annualIncomeMin / 100000).toFixed(1)} Lakhs` 
-                    : '-'}
-                </Text>
-              </View>
-            )}
           </View>
         </View>
 
         {/* Family Details */}
         <View style={styles.detailSection}>
           <Text style={styles.sectionTitle}>
-            {currentLang === 'hi' ? 'पारिवारिक विवरण' : 'Family Details'}
+            {currentLang === 'hi' ? 'पारिवारिक विवरण / Family Details' : 'Family Details'}
           </Text>
           <View style={styles.detailsList}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Father's Name / पिता का नाम</Text>
               <Text style={styles.detailValue}>
-                {profile.fatherName ? profile.fatherName : (profile.family?.fatherName || 'Locked / लॉक है')}
+                {profile.fatherName ? profile.fatherName : (profile.family?.fatherName || (currentLang === 'hi' ? 'लॉक है' : 'Locked'))}
               </Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Father's Occupation / पिता का व्यवसाय</Text>
-              <Text style={styles.detailValue}>
-                {profile.family?.fatherOccupation || '-'}
-              </Text>
+              <Text style={styles.detailValue}>{profile.family?.fatherOccupation || '-'}</Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Mother's Name / माता का नाम</Text>
               <Text style={styles.detailValue}>
-                {profile.family?.motherName || 'Locked / लॉक है'}
+                {profile.family?.motherName || (currentLang === 'hi' ? 'लॉक है' : 'Locked')}
               </Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Family Type / परिवार का प्रकार</Text>
-              <Text style={styles.detailValue}>
-                {profile.family?.familyType || '-'}
-              </Text>
+              <Text style={styles.detailLabel}>Mother's Occupation / माता का व्यवसाय</Text>
+              <Text style={styles.detailValue}>{profile.family?.motherOccupation || '-'}</Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Family Status / पारिवारिक स्तर</Text>
-              <Text style={styles.detailValue}>
-                {profile.family?.familyStatus || '-'}
-              </Text>
+              <Text style={styles.detailLabel}>No Of Married Brothers / शादीशुदा भाई</Text>
+              <Text style={styles.detailValue}>{profile.family?.marriedBrothers !== undefined ? profile.family.marriedBrothers : '-'}</Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Address / पता</Text>
-              <Text style={styles.detailValue}>
-                {profile.homeAddress ? profile.homeAddress : (profile.family?.homeAddress || 'Locked / लॉक है')}
-              </Text>
+              <Text style={styles.detailLabel}>No Of Unmarried Brothers / अविवाहित भाई</Text>
+              <Text style={styles.detailValue}>{profile.family?.unmarriedBrothers !== undefined ? profile.family.unmarriedBrothers : '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>No Of Married Sisters / शादीशुदा बहन</Text>
+              <Text style={styles.detailValue}>{profile.family?.marriedSisters !== undefined ? profile.family.marriedSisters : '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>No Of Unmarried Sisters / अविवाहित बहन</Text>
+              <Text style={styles.detailValue}>{profile.family?.unmarriedSisters !== undefined ? profile.family.unmarriedSisters : '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Maternal Uncle Name / मामा का नाम</Text>
+              <Text style={styles.detailValue}>{profile.family?.maternalUncleName || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Maternal Uncle Aakna / मामा का आकना</Text>
+              <Text style={styles.detailValue}>{profile.family?.maternalUncleAakna || '-'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>House / घर</Text>
+              <Text style={styles.detailValue}>{getBilingualValue('hasHouse', profile.family?.hasHouse)}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Car / कार</Text>
+              <Text style={styles.detailValue}>{getBilingualValue('hasCar', profile.family?.hasCar)}</Text>
             </View>
           </View>
         </View>

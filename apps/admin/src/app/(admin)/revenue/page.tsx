@@ -1,34 +1,42 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { SuperAdminGuard } from '@/components/SuperAdminGuard';
 import { useToast } from '@/contexts/ToastContext';
 import { apiRequest } from '@/lib/api';
 import { formatCurrency, formatDate, statusBadgeClass } from '@/lib/format';
 import { getNextCursor, type RevenueSummary, type Subscription } from '@/lib/types';
 
+type ExpiryFilter = 'all' | 'active' | 'expired';
+
 export default function RevenuePage() {
   const { showToast } = useToast();
   const [summary, setSummary] = useState<RevenueSummary | null>(null);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [expiryFilter, setExpiryFilter] = useState<ExpiryFilter>('all');
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const loadSubscriptions = useCallback(async (nextCursor?: string | null, append = false) => {
-    const params = nextCursor ? `?cursor=${encodeURIComponent(nextCursor)}` : '';
-    const res = await apiRequest<Subscription[]>(`/admin/subscriptions${params}`);
-    const next = getNextCursor(res.meta);
-    setSubscriptions((prev) => (append ? [...prev, ...res.data] : res.data));
-    setCursor(next);
-    setHasMore(!!next);
-  }, []);
+  const loadSubscriptions = useCallback(
+    async (nextCursor?: string | null, append = false) => {
+      const params = new URLSearchParams();
+      if (expiryFilter !== 'all') params.set('expiry', expiryFilter);
+      if (nextCursor) params.set('cursor', nextCursor);
+      const qs = params.toString();
+      const res = await apiRequest<Subscription[]>(`/admin/subscriptions${qs ? `?${qs}` : ''}`);
+      const next = getNextCursor(res.meta);
+      setSubscriptions((prev) => (append ? [...prev, ...res.data] : res.data));
+      setCursor(next);
+      setHasMore(!!next);
+    },
+    [expiryFilter]
+  );
 
   useEffect(() => {
-    Promise.all([
-      apiRequest<RevenueSummary>('/admin/revenue'),
-      loadSubscriptions(),
-    ])
+    setLoading(true);
+    Promise.all([apiRequest<RevenueSummary>('/admin/revenue'), loadSubscriptions()])
       .then(([revRes]) => setSummary(revRes.data))
       .catch((err) => showToast(err instanceof Error ? err.message : 'Failed to load revenue', 'error'))
       .finally(() => setLoading(false));
@@ -55,7 +63,7 @@ export default function RevenuePage() {
   }
 
   return (
-    <>
+    <SuperAdminGuard>
       <div className="page-header">
         <h2>Revenue & Payments</h2>
         <p>Subscription revenue and transaction history</p>
@@ -83,8 +91,18 @@ export default function RevenuePage() {
       )}
 
       <div className="card">
-        <div className="card__header">
+        <div className="card__header flex-between">
           <h3>Transaction History</h3>
+          <select
+            value={expiryFilter}
+            onChange={(e) => setExpiryFilter(e.target.value as ExpiryFilter)}
+            className="form-input"
+            style={{ width: 'auto' }}
+          >
+            <option value="all">All subscriptions</option>
+            <option value="active">Active only</option>
+            <option value="expired">Expired only</option>
+          </select>
         </div>
         {subscriptions.length === 0 ? (
           <div className="empty-state"><p>No transactions yet</p></div>
@@ -97,6 +115,7 @@ export default function RevenuePage() {
                     <th>User ID</th>
                     <th>Plan</th>
                     <th>Amount</th>
+                    <th>Expires</th>
                     <th>Order ID</th>
                     <th>Payment ID</th>
                     <th>Date</th>
@@ -109,6 +128,7 @@ export default function RevenuePage() {
                       <td><code style={{ fontSize: 11 }}>{sub.userId.slice(0, 8)}…</code></td>
                       <td>{sub.plan.name}</td>
                       <td>{formatCurrency(sub.plan.priceInr)}</td>
+                      <td>{sub.expiresAt ? formatDate(sub.expiresAt) : '—'}</td>
                       <td><code style={{ fontSize: 11 }}>{sub.razorpayOrderId}</code></td>
                       <td>{sub.razorpayPaymentId ? <code style={{ fontSize: 11 }}>{sub.razorpayPaymentId}</code> : '—'}</td>
                       <td>{formatDate(sub.createdAt)}</td>
@@ -128,6 +148,6 @@ export default function RevenuePage() {
           </>
         )}
       </div>
-    </>
+    </SuperAdminGuard>
   );
 }
