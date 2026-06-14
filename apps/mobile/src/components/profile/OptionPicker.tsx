@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-interface OptionPickerProps<T extends string> {
+interface OptionPickerProps<T extends string | number> {
   label: string;
   options: readonly T[];
   value: T;
@@ -10,7 +10,7 @@ interface OptionPickerProps<T extends string> {
   getDisplayLabel?: (option: T) => string;
 }
 
-export function OptionPicker<T extends string>({
+export function OptionPicker<T extends string | number>({
   label,
   options,
   value,
@@ -43,9 +43,9 @@ export function OptionPicker<T extends string>({
 
 const styles = StyleSheet.create({
   label: {
-    color: '#D4BFA0',
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#8A7A60',
+    fontSize: 12,
+    fontWeight: '500',
     marginTop: 16,
     marginBottom: 8,
   },
@@ -61,8 +61,8 @@ const styles = StyleSheet.create({
   radio: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#3D281C',
-    backgroundColor: '#2C1A10',
+    borderColor: '#E8E0D0',
+    backgroundColor: '#F5F0E8',
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
@@ -71,9 +71,9 @@ const styles = StyleSheet.create({
   },
   smallRadio: {
     borderWidth: 1,
-    borderColor: '#3D281C',
-    backgroundColor: '#2C1A10',
-    borderRadius: 6,
+    borderColor: '#E8E0D0',
+    backgroundColor: '#F5F0E8',
+    borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 8,
     alignItems: 'center',
@@ -81,17 +81,17 @@ const styles = StyleSheet.create({
     margin: 4,
   },
   radioSelected: {
-    borderColor: '#E8B84B',
-    backgroundColor: '#FFF9F0',
+    borderColor: '#B5620E',
+    backgroundColor: '#B5620E',
   },
   radioText: {
-    color: '#D4BFA0',
-    fontWeight: '600',
-    fontSize: 14,
+    color: '#3D2E1A',
+    fontWeight: '500',
+    fontSize: 13,
   },
   radioTextSelected: {
-    color: '#1A0800',
-    fontWeight: '700',
-    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 13,
   },
 });

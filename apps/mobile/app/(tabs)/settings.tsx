@@ -116,7 +116,7 @@ export default function SettingsScreen() {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#E8B84B" />
+        <ActivityIndicator size="large" color="#B5620E" />
       </View>
     );
   }
@@ -150,7 +150,7 @@ export default function SettingsScreen() {
       {/* Profile summary header */}
       <View style={styles.profileCard}>
         <View style={styles.avatarContainer}>
-          <Ionicons name="person" size={40} color="#E8B84B" />
+          <Ionicons name="person" size={40} color="#B5620E" />
         </View>
         <View style={styles.profileDetails}>
           <Text style={styles.profileId}>
@@ -165,7 +165,7 @@ export default function SettingsScreen() {
           )}
           <Text style={styles.profileEmail}>{userProfile?.user?.email || ''}</Text>
           <View style={[styles.tierBadge, isPremium ? styles.premiumBadge : styles.freeBadge]}>
-            <Ionicons name={isPremium ? 'shield-checkmark' : 'shield-outline'} size={14} color={isPremium ? '#1A0800' : '#D4BFA0'} />
+            <Ionicons name={isPremium ? 'shield-checkmark' : 'shield-outline'} size={14} color={isPremium ? '#FFFFFF' : '#3D2E1A'} />
             <Text style={[styles.tierText, isPremium ? styles.premiumText : styles.freeText]}>
               {isPremium ? 'PREMIUM / प्रीमियम' : 'FREE / फ्री'}
             </Text>
@@ -179,7 +179,7 @@ export default function SettingsScreen() {
             {currentLang === 'hi' ? 'प्रोफ़ाइल ID' : 'Profile ID'}
           </Text>
           <TouchableOpacity style={styles.menuItem} onPress={handleShareProfileId}>
-            <Ionicons name="share-outline" size={22} color="#E8B84B" />
+            <Ionicons name="share-outline" size={22} color="#B5620E" />
             <Text style={styles.menuText}>
               {currentLang === 'hi' ? 'प्रोफ़ाइल ID शेयर करें' : 'Share Profile ID'}
             </Text>
@@ -227,7 +227,7 @@ export default function SettingsScreen() {
               English
             </Text>
             {currentLang === 'en' && (
-              <Ionicons name="checkmark-circle" size={18} color="#E8B84B" />
+              <Ionicons name="checkmark-circle" size={18} color="#B5620E" />
             )}
           </TouchableOpacity>
 
@@ -240,11 +240,11 @@ export default function SettingsScreen() {
               हिन्दी
             </Text>
             {currentLang === 'hi' && (
-              <Ionicons name="checkmark-circle" size={18} color="#E8B84B" />
+              <Ionicons name="checkmark-circle" size={18} color="#B5620E" />
             )}
           </TouchableOpacity>
         </View>
-        {updatingLang && <ActivityIndicator size="small" color="#E8B84B" style={{ marginTop: 8 }} />}
+        {updatingLang && <ActivityIndicator size="small" color="#B5620E" style={{ marginTop: 8 }} />}
       </View>
 
       {/* Menu Options Section */}
@@ -258,7 +258,7 @@ export default function SettingsScreen() {
           onPress={() => router.push('/profile/views')}
         >
           <View style={styles.menuLeft}>
-            <Ionicons name="eye-outline" size={20} color="#D4BFA0" />
+            <Ionicons name="eye-outline" size={20} color="#8A7A60" />
             <Text style={styles.menuText}>
               {currentLang === 'hi' ? 'किसने मेरी प्रोफ़ाइल देखी' : 'Who Viewed My Profile'}
             </Text>
@@ -272,12 +272,12 @@ export default function SettingsScreen() {
             onPress={() => router.push('/payment/checkout')}
           >
             <View style={styles.menuLeft}>
-              <Ionicons name="gift-outline" size={20} color="#E8B84B" />
-              <Text style={[styles.menuText, { color: '#E8B84B' }]}>
+              <Ionicons name="gift-outline" size={20} color="#B5620E" />
+              <Text style={[styles.menuText, { color: '#B5620E' }]}>
                 {currentLang === 'hi' ? 'प्रीमियम में अपग्रेड करें' : 'Upgrade to Premium'}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#E8B84B" />
+            <Ionicons name="chevron-forward" size={20} color="#B5620E" />
           </TouchableOpacity>
         )}
       </View>
@@ -289,7 +289,7 @@ export default function SettingsScreen() {
         </Text>
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={20} color="#1A0800" />
+          <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
           <Text style={styles.logoutButtonText}>
             {currentLang === 'hi' ? 'लॉग आउट' : 'Log Out'}
           </Text>
@@ -309,24 +309,24 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
   },
   contentContainer: {
     padding: 16,
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
     alignItems: 'center',
     justifyContent: 'center',
   },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
     padding: 16,
     marginBottom: 24,
   },
@@ -334,21 +334,21 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#1C0D05',
+    backgroundColor: '#FDFAF5',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
   },
   profileDetails: {
     marginLeft: 16,
     flex: 1,
   },
   profileId: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 18,
     fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   profileIdHint: {
     color: '#8A7A60',
@@ -371,10 +371,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   freeBadge: {
-    backgroundColor: '#3D281C',
+    backgroundColor: '#E8E0D0',
   },
   premiumBadge: {
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
   },
   tierText: {
     fontSize: 11,
@@ -382,16 +382,16 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   freeText: {
-    color: '#D4BFA0',
+    color: '#3D2E1A',
   },
   premiumText: {
-    color: '#1A0800',
+    color: '#FFFFFF',
   },
   section: {
     marginBottom: 24,
   },
   sectionHeader: {
-    color: '#D4BFA0',
+    color: '#3D2E1A',
     fontSize: 14,
     fontWeight: 'bold',
     textTransform: 'uppercase',
@@ -399,10 +399,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   langSelector: {
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
     overflow: 'hidden',
   },
   langOption: {
@@ -412,27 +412,27 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#3D281C',
+    borderBottomColor: '#E8E0D0',
   },
   langOptionSelected: {
-    backgroundColor: '#382216',
+    backgroundColor: '#FDF3E0',
   },
   langText: {
     color: '#8A7A60',
     fontSize: 15,
   },
   langTextSelected: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontWeight: 'bold',
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
     paddingVertical: 16,
     paddingHorizontal: 16,
     marginBottom: 12,
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   menuText: {
-    color: '#D4BFA0',
+    color: '#3D2E1A',
     fontSize: 15,
     fontWeight: '600',
     marginLeft: 12,
@@ -454,10 +454,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   lookupInput: {
-    backgroundColor: '#2C1A10',
-    color: '#FFFFFF',
+    backgroundColor: '#FFFFFF',
+    color: '#3D2E1A',
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -465,13 +465,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   lookupButton: {
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
   },
   lookupButtonText: {
-    color: '#1A0800',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
   },
@@ -479,13 +479,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
     borderRadius: 12,
     paddingVertical: 14,
     marginBottom: 16,
   },
   logoutButtonText: {
-    color: '#1A0800',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: 'bold',
     marginLeft: 8,
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   deleteButtonText: {
-    color: '#FF6F61',
+    color: '#C0392B',
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 6,

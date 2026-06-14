@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { apiRequest } from '../../src/lib/api';
 import { useAuth } from '../../src/lib/auth';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon, Card, Pill } from '../../src/components/ui';
+import { colors, spacing, radius } from '../../src/theme';
 
 interface MatchCandidate {
   id: string;
@@ -31,6 +23,17 @@ interface MatchCandidate {
   isVerified: boolean;
 }
 
+const CATEGORY_PILLS = [
+  { key: 'all', label: 'All / सभी' },
+  { key: 'new', label: 'New / नए' },
+  { key: 'premium', label: 'Premium' },
+  { key: '30plus', label: '30+ Age' },
+  { key: 'divorce', label: 'Divorce' },
+  { key: 'widow', label: 'Widow' },
+  { key: 'manglik', label: 'Manglik' },
+  { key: 'business', label: 'Business' },
+];
+
 export default function MatchesScreen() {
   const router = useRouter();
   const { userProfile } = useAuth();
@@ -40,19 +43,19 @@ export default function MatchesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [activePill, setActivePill] = useState('all');
+
+  const isPremium = userProfile?.user?.tier === 'paid';
 
   const fetchMatches = async (cursor?: string, isRefresh = false) => {
     try {
       const path = `/matches/suggestions${cursor ? `?cursor=${btoa(cursor)}` : ''}`;
       const res = await apiRequest(path);
-      
       if (res.success && res.data) {
         const list: MatchCandidate[] = res.data;
         if (isRefresh) {
           setCandidates(list);
-          if (list.length > 0) {
-            setTopPick(list[0]); // Pick first as Top Pick for demo/MVP
-          }
+          if (list.length > 0) setTopPick(list[0]);
         } else {
           setCandidates((prev) => [...prev, ...list]);
         }
@@ -89,9 +92,7 @@ export default function MatchesScreen() {
         method: 'POST',
         body: JSON.stringify({ receiverId: candidateId }),
       });
-      if (res.success) {
-        Alert.alert('Success / सफलता', 'Interest request sent! / रुचि अनुरोध भेजा गया!');
-      }
+      if (res.success) Alert.alert('Sent / भेजा गया', 'Interest request sent! / रुचि अनुरोध भेजा गया!');
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to send interest');
     }
@@ -99,281 +100,231 @@ export default function MatchesScreen() {
 
   const handleShortlist = async (candidateId: string) => {
     try {
-      const res = await apiRequest(`/shortlist/${candidateId}`, {
-        method: 'POST',
-      });
-      if (res.success) {
-        Alert.alert('Success / सफलता', 'Added to Shortlist! / सूची में जोड़ा गया!');
-      }
+      const res = await apiRequest(`/shortlist/${candidateId}`, { method: 'POST' });
+      if (res.success) Alert.alert('Saved / सहेजा गया', 'Added to Shortlist! / सूची में जोड़ा गया!');
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to shortlist');
     }
   };
 
-  const renderCandidateCard = ({ item }: { item: MatchCandidate }) => {
-    return (
-      <View style={styles.card}>
-        <TouchableOpacity
-          onPress={() => router.push(`/profile/${item.profileId}`)}
-          style={styles.cardHeader}
-        >
-          <Image
-            source={{ uri: item.photoUrl || 'https://via.placeholder.com/150' }}
-            style={styles.avatar}
-          />
-          <View style={styles.cardDetails}>
-            <View style={styles.nameRow}>
-              <Text style={styles.cardName}>
-                GS{item.profileId} {item.isVerified && <Ionicons name="checkmark-circle" size={16} color="#E8B84B" />}
-              </Text>
-              <Text style={styles.matchScore}>{item.matchScore}% Match</Text>
-            </View>
-            <Text style={styles.cardInfo}>
-              {item.age} yrs • {item.heightDisplay || (item.height_cm ? `${item.height_cm} cm` : '—')} • {item.maritalStatus}
-            </Text>
-            <Text style={styles.cardSubInfo}>
-              Gotra: {item.gotra} • {item.city}
-            </Text>
+  const renderCard = ({ item }: { item: MatchCandidate }) => (
+    <Card style={styles.card}>
+      <TouchableOpacity activeOpacity={0.9} onPress={() => router.push(`/profile/${item.profileId}`)}>
+        <View style={styles.photoWrap}>
+          <Image source={{ uri: item.photoUrl || 'https://via.placeholder.com/400x240' }} style={styles.photo} />
+          <View style={styles.idOverlay}>
+            <Text style={styles.idOverlayText}>Profile Id – GS {item.profileId}</Text>
           </View>
-        </TouchableOpacity>
+          {item.isVerified && (
+            <View style={styles.verifiedPill}>
+              <Icon name="verified" size={11} color={colors.verified} />
+              <Text style={styles.verifiedText}>Verified</Text>
+            </View>
+          )}
+          <View style={styles.pillStack}>
+            {!!item.gotra && <Pill label={item.gotra} bg={colors.borderWarm} color="#5C3A1A" />}
+            {!!item.occupation && <Pill label={item.occupation} bg="#F0E8D8" color="#5C3A1A" />}
+          </View>
+        </View>
+      </TouchableOpacity>
 
-        <View style={styles.cardActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleSendInterest(item.id)}
-          >
-            <Ionicons name="heart" size={18} color="#E8B84B" />
-            <Text style={styles.actionText}>Interest</Text>
+      <View style={styles.cardInfo}>
+        <Text style={styles.name}>GS {item.profileId}</Text>
+        <Text style={styles.meta}>
+          {item.age} years  🇮🇳  {item.city}
+        </Text>
+        <Text style={styles.metaSub}>
+          {item.heightDisplay || (item.height_cm ? `${item.height_cm} cm` : '—')} · {item.maritalStatus} · {item.matchScore}% match
+        </Text>
+
+        <View style={styles.actionRow}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => handleShortlist(item.id)}>
+            <Icon name="bookmark" size={16} color={colors.sacredGold} />
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleShortlist(item.id)}
-          >
-            <Ionicons name="bookmark" size={18} color="#D4BFA0" />
-            <Text style={styles.actionText}>Shortlist</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.primaryAction]}
-            onPress={() => router.push(`/profile/${item.profileId}`)}
-          >
-            <Text style={styles.primaryActionText}>View / देखें</Text>
+          <TouchableOpacity style={styles.sendBtn} onPress={() => handleSendInterest(item.id)}>
+            <Icon name="heart" size={14} color={colors.onGold} />
+            <Text style={styles.sendBtnText}>Send Interest</Text>
           </TouchableOpacity>
         </View>
       </View>
-    );
-  };
+    </Card>
+  );
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#E8B84B" />
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.sacredGold} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
+      {/* Header bar — spec §7.1 */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>Namaste, {userProfile?.firstName || 'Member'}</Text>
+          <Text style={styles.greetingSub}>{candidates.length} matches today</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.circleBtn} onPress={() => router.push('/(tabs)/search' as any)}>
+            <Icon name="search" size={18} color={colors.sacredGold} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.circleBtn} onPress={() => router.push('/drawer' as any)}>
+            <Icon name="menu" size={18} color={colors.sacredGold} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <FlatList
         data={candidates}
-        renderItem={renderCandidateCard}
+        renderItem={renderCard}
         keyExtractor={(item) => item.id}
         refreshing={refreshing}
         onRefresh={handleRefresh}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
+        contentContainerStyle={{ paddingBottom: spacing.xl }}
         ListHeaderComponent={
-          topPick ? (
-            <View style={styles.topPickSection}>
-              <Text style={styles.sectionHeader}>Today's Top Pick / आज का मुख्य मिलान</Text>
-              <TouchableOpacity
-                style={styles.topPickCard}
-                onPress={() => router.push(`/profile/${topPick.profileId}`)}
-              >
-                <Image
-                  source={{ uri: topPick.photoUrl || 'https://via.placeholder.com/300' }}
-                  style={styles.topPickImage}
-                />
-                <View style={styles.topPickOverlay}>
-                  <Text style={styles.topPickName}>GS{topPick.profileId}</Text>
-                  <Text style={styles.topPickSub}>
-                    {topPick.age} yrs • {topPick.city} • Gotra: {topPick.gotra}
-                  </Text>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{topPick.matchScore}% Match Score</Text>
+          <View>
+            {/* Category pills — spec §7.2 */}
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={CATEGORY_PILLS}
+              keyExtractor={(p) => p.key}
+              contentContainerStyle={styles.pillBar}
+              renderItem={({ item }) => (
+                <View style={{ marginRight: spacing.sm }}>
+                  <Pill label={item.label} active={activePill === item.key} onPress={() => setActivePill(item.key)} />
+                </View>
+              )}
+            />
+
+            {/* Today's top pick — paid only, spec §7.3 */}
+            {isPremium && topPick && (
+              <TouchableOpacity activeOpacity={0.9} onPress={() => router.push(`/profile/${topPick.profileId}`)}>
+                <View style={styles.topPick}>
+                  <Image source={{ uri: topPick.photoUrl || 'https://via.placeholder.com/80' }} style={styles.topPickAvatar} />
+                  <View style={{ flex: 1, marginLeft: spacing.md }}>
+                    <Text style={styles.topPickLabel}>★ Today's top pick</Text>
+                    <Text style={styles.name}>GS {topPick.profileId}</Text>
+                    <Text style={styles.metaSub}>
+                      {topPick.education} · {topPick.city} · {topPick.matchScore}%
+                    </Text>
                   </View>
+                  <TouchableOpacity style={styles.sendBtnSmall} onPress={() => handleSendInterest(topPick.id)}>
+                    <Text style={styles.sendBtnText}>Send Interest</Text>
+                  </TouchableOpacity>
                 </View>
               </TouchableOpacity>
-              <Text style={styles.sectionHeader}>More Recommendations / अन्य मिलान</Text>
-            </View>
-          ) : null
+            )}
+          </View>
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
+          <View style={styles.empty}>
             <Text style={styles.emptyText}>No matches found / कोई मिलान नहीं मिला</Text>
           </View>
         }
-        ListFooterComponent={
-          loadingMore ? <ActivityIndicator size="small" color="#E8B84B" style={{ marginVertical: 16 }} /> : null
-        }
+        ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.sacredGold} style={{ marginVertical: spacing.lg }} /> : null}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1A0800',
+  container: { flex: 1, backgroundColor: colors.ivory },
+  center: { flex: 1, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.white,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderWarm,
   },
-  centerContainer: {
-    flex: 1,
-    backgroundColor: '#1A0800',
+  greeting: { fontSize: 13, fontWeight: '500', color: colors.darkBrown },
+  greetingSub: { fontSize: 10, color: colors.midBrown, marginTop: 2 },
+  headerActions: { flexDirection: 'row', gap: spacing.sm },
+  circleBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.lightGold,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.goldAccent,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  topPickSection: {
-    padding: 16,
+  pillBar: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  topPick: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.topPickBg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.goldAccent,
+    borderRadius: radius.card,
+    padding: spacing.md,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
   },
-  sectionHeader: {
-    color: '#D4BFA0',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  topPickCard: {
-    height: 220,
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#3D281C',
-  },
-  topPickImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  topPickOverlay: {
+  topPickAvatar: { width: 38, height: 38, borderRadius: 9 },
+  topPickLabel: { fontSize: 10, color: '#8A4408', marginBottom: 2 },
+  card: { padding: 0, overflow: 'hidden', marginHorizontal: spacing.lg, marginBottom: spacing.lg },
+  photoWrap: { height: 200, backgroundColor: colors.lightGold },
+  photo: { width: '100%', height: '100%', resizeMode: 'cover' },
+  idOverlay: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: 'rgba(26, 8, 0, 0.75)',
-  },
-  topPickName: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  topPickSub: {
-    color: '#D4BFA0',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#E8B84B',
+    bottom: spacing.sm,
+    left: spacing.sm,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginTop: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
-  badgeText: {
-    color: '#1A0800',
-    fontWeight: '700',
-    fontSize: 12,
-  },
-  card: {
-    backgroundColor: '#2C1A10',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#3D281C',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
-  },
-  cardHeader: {
+  idOverlayText: { color: '#FFFFFF', fontSize: 10 },
+  verifiedPill: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
     flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: radius.pill,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    gap: 2,
   },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    resizeMode: 'cover',
-  },
-  cardDetails: {
-    flex: 1,
-    marginLeft: 16,
+  verifiedText: { color: colors.verified, fontSize: 10, fontWeight: '500' },
+  pillStack: { position: 'absolute', bottom: spacing.sm, right: spacing.sm, alignItems: 'flex-end', gap: 4 },
+  cardInfo: { padding: spacing.md },
+  name: { fontSize: 13, fontWeight: '500', color: colors.darkBrown },
+  meta: { fontSize: 10, color: colors.midBrown, marginTop: 2 },
+  metaSub: { fontSize: 10, color: colors.midBrown, marginTop: 2 },
+  actionRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, gap: spacing.sm },
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.button,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.borderWarm,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  nameRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardName: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  matchScore: {
-    color: '#E8B84B',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  cardInfo: {
-    color: '#D4BFA0',
-    fontSize: 13,
-    marginTop: 4,
-  },
-  cardSubInfo: {
-    color: '#8A7A60',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#3D281C',
-    marginTop: 16,
-    paddingTop: 12,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  actionButton: {
+  sendBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    justifyContent: 'center',
+    backgroundColor: colors.sacredGold,
+    borderRadius: radius.button,
+    paddingVertical: 10,
+    gap: 6,
   },
-  actionText: {
-    color: '#D4BFA0',
-    fontSize: 13,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  primaryAction: {
-    backgroundColor: '#E8B84B',
-    borderRadius: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-  },
-  primaryActionText: {
-    color: '#1A0800',
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  emptyContainer: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: '#8A7A60',
-    fontSize: 15,
-  },
+  sendBtnSmall: { backgroundColor: colors.sacredGold, borderRadius: radius.button, paddingHorizontal: spacing.md, paddingVertical: 8 },
+  sendBtnText: { color: colors.onGold, fontSize: 11, fontWeight: '600' },
+  empty: { padding: 40, alignItems: 'center' },
+  emptyText: { color: colors.midBrown, fontSize: 13 },
 });

@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { apiRequest } from '../../src/lib/api';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon, Card } from '../../src/components/ui';
+import { colors, spacing } from '../../src/theme';
 
 interface ShortlistedItem {
   id: string;
@@ -32,9 +25,7 @@ export default function ShortlistScreen() {
   const fetchShortlist = async () => {
     try {
       const res = await apiRequest('/shortlist');
-      if (res.success && res.data) {
-        setList(res.data);
-      }
+      if (res.success && res.data) setList(res.data);
     } catch (err: any) {
       console.warn('Error fetching shortlist:', err.message);
     } finally {
@@ -52,55 +43,41 @@ export default function ShortlistScreen() {
     fetchShortlist();
   };
 
-  const handleRemove = async (profileId: string) => {
+  const handleRemove = async (id: string) => {
     try {
-      const res = await apiRequest(`/shortlist/${profileId}`, {
-        method: 'DELETE',
-      });
-      if (res.success) {
-        setList((prev) => prev.filter((item) => item.id !== profileId));
-        Alert.alert('Success / सफलता', 'Removed from Shortlist / सूची से हटाया गया');
-      }
+      const res = await apiRequest(`/shortlist/${id}`, { method: 'DELETE' });
+      if (res.success) setList((prev) => prev.filter((item) => item.id !== id));
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to remove from shortlist');
     }
   };
 
-  const renderItem = ({ item }: { item: ShortlistedItem }) => {
-    return (
-      <View style={styles.card}>
-        <TouchableOpacity
-          style={styles.cardBody}
-          onPress={() => router.push(`/profile/${item.profileId}`)}
-        >
-          <View style={styles.avatarPlaceholder}>
-            <Ionicons name="bookmark" size={24} color="#E8B84B" />
-          </View>
-          <View style={styles.details}>
-            <Text style={styles.name}>GS{item.profileId}</Text>
-            <Text style={styles.sub}>
-              {item.gender} • {item.gotra} • {item.livingCity?.name || 'City'}
-            </Text>
-            <Text style={styles.subText}>
-              {item.maritalStatus} • {item.heightDisplay || (item.height_cm ? `${item.height_cm} cm` : '—')}
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => handleRemove(item.id)}
-        >
-          <Ionicons name="trash-outline" size={20} color="#FF6F61" />
-        </TouchableOpacity>
-      </View>
-    );
-  };
+  const renderItem = ({ item }: { item: ShortlistedItem }) => (
+    <Card style={styles.card}>
+      <TouchableOpacity style={styles.cardBody} onPress={() => router.push(`/profile/${item.profileId}`)}>
+        <View style={styles.avatar}>
+          <Icon name="bookmark-filled" size={22} color={colors.sacredGold} />
+        </View>
+        <View style={styles.details}>
+          <Text style={styles.name}>GS {item.profileId}</Text>
+          <Text style={styles.sub}>
+            {item.gender} · {item.gotra} · {item.livingCity?.name || 'City'}
+          </Text>
+          <Text style={styles.subText}>
+            {item.maritalStatus} · {item.heightDisplay || (item.height_cm ? `${item.height_cm} cm` : '—')}
+          </Text>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.removeButton} onPress={() => handleRemove(item.id)}>
+        <Icon name="trash" size={18} color={colors.rejected} />
+      </TouchableOpacity>
+    </Card>
+  );
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#E8B84B" />
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.sacredGold} />
       </View>
     );
   }
@@ -113,9 +90,9 @@ export default function ShortlistScreen() {
         keyExtractor={(item) => item.id}
         refreshing={refreshing}
         onRefresh={handleRefresh}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: spacing.lg }}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
+          <View style={styles.empty}>
             <Text style={styles.emptyText}>Your Shortlist is empty / आपकी सूची खाली है</Text>
           </View>
         }
@@ -125,68 +102,25 @@ export default function ShortlistScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1A0800',
-  },
-  centerContainer: {
-    flex: 1,
-    backgroundColor: '#1A0800',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2C1A10',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#3D281C',
-    marginBottom: 12,
-    padding: 16,
-  },
-  cardBody: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarPlaceholder: {
+  container: { flex: 1, backgroundColor: colors.ivory },
+  center: { flex: 1, backgroundColor: colors.ivory, alignItems: 'center', justifyContent: 'center' },
+  card: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
+  cardBody: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  avatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#1C0D05',
+    backgroundColor: colors.lightGold,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#3D281C',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.borderWarm,
   },
-  details: {
-    marginLeft: 16,
-  },
-  name: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  sub: {
-    color: '#D4BFA0',
-    fontSize: 13,
-    marginTop: 2,
-  },
-  subText: {
-    color: '#8A7A60',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  removeButton: {
-    padding: 8,
-  },
-  emptyContainer: {
-    padding: 60,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: '#8A7A60',
-    fontSize: 14,
-  },
+  details: { marginLeft: spacing.lg, flex: 1 },
+  name: { color: colors.darkBrown, fontSize: 13, fontWeight: '500' },
+  sub: { color: colors.midBrown, fontSize: 11, marginTop: 2 },
+  subText: { color: colors.midBrown, fontSize: 10, marginTop: 2 },
+  removeButton: { padding: spacing.sm },
+  empty: { padding: 60, alignItems: 'center' },
+  emptyText: { color: colors.midBrown, fontSize: 13 },
 });

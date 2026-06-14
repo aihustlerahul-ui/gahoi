@@ -103,7 +103,7 @@ export default function ProfileViewsScreen() {
           <Ionicons
             name={item.viewer.isMasked ? 'lock-closed' : 'person'}
             size={24}
-            color={item.viewer.isMasked ? '#E8B84B' : '#D4BFA0'}
+            color={item.viewer.isMasked ? '#B5620E' : '#3D2E1A'}
           />
         </View>
 
@@ -126,7 +126,7 @@ export default function ProfileViewsScreen() {
 
         {item.viewer.isMasked && (
           <View style={styles.lockOverlay}>
-            <Ionicons name="gift-outline" size={16} color="#E8B84B" />
+            <Ionicons name="gift-outline" size={16} color="#B5620E" />
             <Text style={styles.unlockCTA}>Unlock / खोलें</Text>
           </View>
         )}
@@ -137,7 +137,7 @@ export default function ProfileViewsScreen() {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#E8B84B" />
+        <ActivityIndicator size="large" color="#B5620E" />
       </View>
     );
   }
@@ -147,7 +147,7 @@ export default function ProfileViewsScreen() {
       {/* Custom Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#E8B84B" />
+          <Ionicons name="arrow-back" size={24} color="#B5620E" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {currentLang === 'hi' ? 'प्रोफ़ाइल दर्शक / Views' : 'Profile Visitors'}
@@ -158,7 +158,7 @@ export default function ProfileViewsScreen() {
       {/* Free user upgrade promotion */}
       {!isPremium && (
         <View style={styles.promoBanner}>
-          <Ionicons name="star" size={20} color="#1A0800" />
+          <Ionicons name="star" size={20} color="#FFFFFF" />
           <Text style={styles.promoText}>
             {currentLang === 'hi'
               ? 'प्रीमियम लें और देखें कि किसने आपकी प्रोफ़ाइल देखी।'
@@ -198,11 +198,11 @@ export default function ProfileViewsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -210,9 +210,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
     borderBottomWidth: 1,
-    borderBottomColor: '#3D281C',
+    borderBottomColor: '#E8E0D0',
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 44 : 12,
     paddingBottom: 12,
@@ -221,35 +221,35 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 18,
     fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   promoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
     padding: 12,
     margin: 16,
     borderRadius: 8,
   },
   promoText: {
     flex: 1,
-    color: '#1A0800',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 13,
     marginLeft: 8,
     marginRight: 8,
   },
   promoBtn: {
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
     borderRadius: 4,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   promoBtnText: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontWeight: 'bold',
     fontSize: 11,
   },
@@ -260,10 +260,10 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
     marginBottom: 12,
     padding: 16,
   },
@@ -274,11 +274,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#1C0D05',
+    backgroundColor: '#FDFAF5',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
   },
   cardDetails: {
     flex: 1,
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   profileId: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 15,
     fontWeight: '700',
   },
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   infoText: {
-    color: '#D4BFA0',
+    color: '#3D2E1A',
     fontSize: 13,
     marginTop: 4,
   },
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   blurredText: {
-    color: '#3D281C',
+    color: '#E8E0D0',
   },
   lockOverlay: {
     alignItems: 'center',
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
   },
   unlockCTA: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 10,
     fontWeight: 'bold',
     marginTop: 2,

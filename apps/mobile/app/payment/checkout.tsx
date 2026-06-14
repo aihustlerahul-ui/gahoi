@@ -116,7 +116,7 @@ export default function CheckoutScreen() {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#E8B84B" />
+        <ActivityIndicator size="large" color="#B5620E" />
       </View>
     );
   }
@@ -124,7 +124,7 @@ export default function CheckoutScreen() {
   if (paymentSuccess) {
     return (
       <View style={styles.successContainer}>
-        <Ionicons name="checkmark-circle" size={80} color="#E8B84B" style={{ marginBottom: 20 }} />
+        <Ionicons name="checkmark-circle" size={80} color="#B5620E" style={{ marginBottom: 20 }} />
         <Text style={styles.successTitle}>
           {currentLang === 'hi' ? 'भुगतान सफल! 🎉' : 'Payment Successful! 🎉'}
         </Text>
@@ -159,7 +159,7 @@ export default function CheckoutScreen() {
       {/* Custom Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#E8B84B" />
+          <Ionicons name="arrow-back" size={24} color="#B5620E" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {currentLang === 'hi' ? 'प्रीमियम अपग्रेड / Upgrade' : 'Upgrade Premium'}
@@ -170,7 +170,7 @@ export default function CheckoutScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {/* Promotion header */}
         <View style={styles.promoHeader}>
-          <Ionicons name="sparkles" size={36} color="#E8B84B" style={{ marginBottom: 12 }} />
+          <Ionicons name="sparkles" size={36} color="#B5620E" style={{ marginBottom: 12 }} />
           <Text style={styles.promoTitle}>
             {currentLang === 'hi' ? 'सार्थी प्रीमियम सदस्यता' : 'Sarthi Premium Benefits'}
           </Text>
@@ -184,31 +184,31 @@ export default function CheckoutScreen() {
         {/* Benefits list */}
         <View style={styles.benefitsContainer}>
           <View style={styles.benefitRow}>
-            <Ionicons name="checkmark-circle-outline" size={20} color="#E8B84B" />
+            <Ionicons name="checkmark-circle-outline" size={20} color="#B5620E" />
             <Text style={styles.benefitText}>
               {currentLang === 'hi' ? 'अनमास्क्ड मोबाइल और ईमेल देखें' : 'View unmasked phone numbers & emails'}
             </Text>
           </View>
           <View style={styles.benefitRow}>
-            <Ionicons name="checkmark-circle-outline" size={20} color="#E8B84B" />
+            <Ionicons name="checkmark-circle-outline" size={20} color="#B5620E" />
             <Text style={styles.benefitText}>
               {currentLang === 'hi' ? 'घर के पते और माता-पिता के नाम देखें' : 'View home addresses & parent names'}
             </Text>
           </View>
           <View style={styles.benefitRow}>
-            <Ionicons name="checkmark-circle-outline" size={20} color="#E8B84B" />
+            <Ionicons name="checkmark-circle-outline" size={20} color="#B5620E" />
             <Text style={styles.benefitText}>
               {currentLang === 'hi' ? 'अष्टकूट कुण्डली मिलान स्कोर (36 गुण)' : 'Full Ashtakoot Kundli Gun matching'}
             </Text>
           </View>
           <View style={styles.benefitRow}>
-            <Ionicons name="checkmark-circle-outline" size={20} color="#E8B84B" />
+            <Ionicons name="checkmark-circle-outline" size={20} color="#B5620E" />
             <Text style={styles.benefitText}>
               {currentLang === 'hi' ? 'असीमित रुचि अनुरोध भेजें' : 'Send unlimited interest requests'}
             </Text>
           </View>
           <View style={styles.benefitRow}>
-            <Ionicons name="checkmark-circle-outline" size={20} color="#E8B84B" />
+            <Ionicons name="checkmark-circle-outline" size={20} color="#B5620E" />
             <Text style={styles.benefitText}>
               {currentLang === 'hi' ? 'सभी स्वीकृत गैलरी फ़ोटो देखें' : 'View all approved gallery photos'}
             </Text>
@@ -232,7 +232,7 @@ export default function CheckoutScreen() {
                 <Ionicons
                   name={isSelected ? 'radio-button-on' : 'radio-button-off'}
                   size={20}
-                  color={isSelected ? '#E8B84B' : '#8A7A60'}
+                  color={isSelected ? '#B5620E' : '#8A7A60'}
                 />
                 <View style={styles.planMeta}>
                   <Text style={styles.planName}>
@@ -262,10 +262,10 @@ export default function CheckoutScreen() {
             disabled={purchasing}
           >
             {purchasing ? (
-              <ActivityIndicator size="small" color="#1A0800" />
+              <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <>
-                <Ionicons name="card" size={20} color="#1A0800" />
+                <Ionicons name="card" size={20} color="#FFFFFF" />
                 <Text style={styles.payButtonText}>
                   {currentLang === 'hi' ? 'भुगतान करें' : 'Proceed to Pay'}
                 </Text>
@@ -286,14 +286,14 @@ export default function CheckoutScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="card" size={24} color="#E8B84B" />
+                <Ionicons name="card" size={24} color="#B5620E" />
                 <Text style={styles.modalTitle}>Razorpay Sandbox</Text>
               </View>
               <TouchableOpacity
                 onPress={() => setPaymentModalVisible(false)}
                 disabled={verifying}
               >
-                <Ionicons name="close" size={24} color="#D4BFA0" />
+                <Ionicons name="close" size={24} color="#8A7A60" />
               </TouchableOpacity>
             </View>
 
@@ -312,7 +312,7 @@ export default function CheckoutScreen() {
                 onPress={() => setPaymentMethod('upi')}
                 disabled={verifying}
               >
-                <Ionicons name="logo-google" size={18} color="#D4BFA0" />
+                <Ionicons name="logo-google" size={18} color="#8A7A60" />
                 <Text style={styles.methodText}>Google Pay / UPI</Text>
               </TouchableOpacity>
 
@@ -321,7 +321,7 @@ export default function CheckoutScreen() {
                 onPress={() => setPaymentMethod('card')}
                 disabled={verifying}
               >
-                <Ionicons name="card-outline" size={18} color="#D4BFA0" />
+                <Ionicons name="card-outline" size={18} color="#8A7A60" />
                 <Text style={styles.methodText}>Credit / Debit Card</Text>
               </TouchableOpacity>
 
@@ -330,7 +330,7 @@ export default function CheckoutScreen() {
                 onPress={() => setPaymentMethod('nb')}
                 disabled={verifying}
               >
-                <Ionicons name="business-outline" size={18} color="#D4BFA0" />
+                <Ionicons name="business-outline" size={18} color="#8A7A60" />
                 <Text style={styles.methodText}>Net Banking</Text>
               </TouchableOpacity>
 
@@ -341,7 +341,7 @@ export default function CheckoutScreen() {
                 disabled={verifying}
               >
                 {verifying ? (
-                  <ActivityIndicator size="small" color="#1A0800" />
+                  <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <Text style={styles.modalPayBtnText}>Simulate Success Pay</Text>
                 )}
@@ -357,30 +357,30 @@ export default function CheckoutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
     alignItems: 'center',
     justifyContent: 'center',
   },
   successContainer: {
     flex: 1,
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
   },
   successTitle: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 24,
     fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
     textAlign: 'center',
   },
   successSub: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   doneBtn: {
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
     borderRadius: 8,
     paddingVertical: 14,
     paddingHorizontal: 40,
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   doneBtnText: {
-    color: '#1A0800',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 15,
   },
@@ -411,9 +411,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
     borderBottomWidth: 1,
-    borderBottomColor: '#3D281C',
+    borderBottomColor: '#E8E0D0',
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 44 : 12,
     paddingBottom: 12,
@@ -422,10 +422,10 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 18,
     fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   scrollView: {
     flex: 1,
@@ -439,23 +439,23 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   promoTitle: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 20,
     fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   promoSubtitle: {
-    color: '#D4BFA0',
+    color: '#3D2E1A',
     fontSize: 13,
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 18,
   },
   benefitsContainer: {
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
     padding: 16,
     marginBottom: 28,
   },
@@ -465,13 +465,13 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   benefitText: {
-    color: '#D4BFA0',
+    color: '#3D2E1A',
     fontSize: 13,
     marginLeft: 12,
     flex: 1,
   },
   sectionTitle: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 14,
     fontWeight: 'bold',
     textTransform: 'uppercase',
@@ -482,16 +482,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
     padding: 16,
     marginBottom: 12,
   },
   planCardSelected: {
-    borderColor: '#E8B84B',
-    backgroundColor: '#382216',
+    borderColor: '#B5620E',
+    backgroundColor: '#FDF3E0',
   },
   planCardLeft: {
     flexDirection: 'row',
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   planName: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 15,
     fontWeight: '700',
   },
@@ -511,14 +511,14 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   planPrice: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 18,
     fontWeight: 'bold',
   },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: '#3D281C',
-    backgroundColor: '#2C1A10',
+    borderTopColor: '#E8E0D0',
+    backgroundColor: '#FFFFFF',
     padding: 16,
     paddingBottom: Platform.OS === 'ios' ? 30 : 16,
     flexDirection: 'row',
@@ -533,12 +533,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   footerPriceText: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 20,
     fontWeight: 'bold',
   },
   payButton: {
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   payButtonText: {
-    color: '#1A0800',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 14,
     marginLeft: 8,
@@ -557,11 +557,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
     padding: 20,
     paddingBottom: Platform.OS === 'ios' ? 40 : 20,
   },
@@ -570,12 +570,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#3D281C',
+    borderBottomColor: '#E8E0D0',
     paddingBottom: 12,
     marginBottom: 16,
   },
   modalTitle: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
@@ -588,18 +588,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   orderAmount: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 32,
     fontWeight: 'bold',
     marginVertical: 4,
   },
   orderPlan: {
-    color: '#D4BFA0',
+    color: '#3D2E1A',
     fontSize: 14,
     marginBottom: 20,
   },
   paymentMethodTitle: {
-    color: '#D4BFA0',
+    color: '#3D2E1A',
     fontSize: 13,
     fontWeight: 'bold',
     alignSelf: 'flex-start',
@@ -608,26 +608,26 @@ const styles = StyleSheet.create({
   methodRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
     padding: 12,
     width: '100%',
     marginBottom: 10,
   },
   methodRowSelected: {
-    borderColor: '#E8B84B',
+    borderColor: '#B5620E',
     backgroundColor: '#351C0E',
   },
   methodText: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 13,
     fontWeight: '600',
     marginLeft: 12,
   },
   modalPayButton: {
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
     borderRadius: 8,
     paddingVertical: 14,
     width: '100%',
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   modalPayBtnText: {
-    color: '#1A0800',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 15,
   },

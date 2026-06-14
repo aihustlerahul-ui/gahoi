@@ -252,7 +252,7 @@ export default function ProfileDetailScreen() {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#E8B84B" />
+        <ActivityIndicator size="large" color="#B5620E" />
       </View>
     );
   }
@@ -285,14 +285,14 @@ export default function ProfileDetailScreen() {
       {/* Custom Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#E8B84B" />
+          <Ionicons name="arrow-back" size={24} color="#B5620E" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>GS-{profile.profileId}</Text>
         <TouchableOpacity style={styles.shortlistBtn} onPress={handleShortlistToggle} disabled={actionLoading}>
           <Ionicons
             name={isShortlisted ? 'bookmark' : 'bookmark-outline'}
             size={24}
-            color="#E8B84B"
+            color="#B5620E"
           />
         </TouchableOpacity>
       </View>
@@ -305,13 +305,13 @@ export default function ProfileDetailScreen() {
               <Image source={{ uri: primaryPhoto }} style={styles.photo} />
             ) : (
               <View style={[styles.photo, styles.photoPlaceholder]}>
-                <Ionicons name="person" size={80} color="#3D281C" />
+                <Ionicons name="person" size={80} color="#E8E0D0" />
                 <Text style={styles.placeholderText}>No Photo Uploaded / कोई फोटो नहीं</Text>
               </View>
             )
           ) : (
             <View style={[styles.photo, styles.photoPlaceholder]}>
-              <Ionicons name="lock-closed" size={60} color="#E8B84B" style={{ marginBottom: 12 }} />
+              <Ionicons name="lock-closed" size={60} color="#B5620E" style={{ marginBottom: 12 }} />
               <Text style={styles.lockText}>Photos Locked / फोटो लॉक हैं</Text>
               <Text style={styles.lockSubtext}>
                 Upgrade to Premium to view photos {'\n'} प्रीमियम में अपग्रेड कर फोटो देखें
@@ -332,7 +332,7 @@ export default function ProfileDetailScreen() {
             <Text style={styles.profileIdText}>GS-{profile.profileId}</Text>
             {profile.isVerified && (
               <View style={styles.verifiedBadge}>
-                <Ionicons name="checkmark-circle" size={16} color="#1A0800" />
+                <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
                 <Text style={styles.verifiedText}>Verified</Text>
               </View>
             )}
@@ -348,12 +348,12 @@ export default function ProfileDetailScreen() {
         {/* Action Panel */}
         <View style={styles.actionPanel}>
           {actionLoading ? (
-            <ActivityIndicator size="small" color="#E8B84B" style={{ padding: 12 }} />
+            <ActivityIndicator size="small" color="#B5620E" style={{ padding: 12 }} />
           ) : (
             <>
               {interestStatus === 'none' && (
                 <TouchableOpacity style={styles.primaryActionButton} onPress={handleSendInterest}>
-                  <Ionicons name="heart" size={20} color="#1A0800" />
+                  <Ionicons name="heart" size={20} color="#FFFFFF" />
                   <Text style={styles.primaryActionBtnText}>Send Interest / रुचि भेजें</Text>
                 </TouchableOpacity>
               )}
@@ -361,7 +361,7 @@ export default function ProfileDetailScreen() {
               {interestStatus === 'pending_sent' && (
                 <TouchableOpacity style={styles.secondaryActionButton} onPress={handleWithdrawInterest}>
                   <Ionicons name="close-circle-outline" size={20} color="#FF6F61" />
-                  <Text style={[styles.secondaryActionBtnText, { color: '#FF6F61' }]}>
+                  <Text style={[styles.secondaryActionBtnText, { color: '#C0392B' }]}>
                     Withdraw Interest / रुचि वापस लें
                   </Text>
                 </TouchableOpacity>
@@ -381,15 +381,15 @@ export default function ProfileDetailScreen() {
                     style={[styles.respondButton, styles.acceptButton]}
                     onPress={() => handleRespondInterest('accepted')}
                   >
-                    <Ionicons name="checkmark" size={20} color="#1A0800" />
-                    <Text style={[styles.respondButtonText, { color: '#1A0800' }]}>Accept / स्वीकारें</Text>
+                    <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+                    <Text style={[styles.respondButtonText, { color: '#FFFFFF' }]}>Accept / स्वीकारें</Text>
                   </TouchableOpacity>
                 </View>
               )}
 
               {interestStatus === 'accepted' && (
                 <View style={styles.connectedBadge}>
-                  <Ionicons name="ribbon" size={20} color="#E8B84B" />
+                  <Ionicons name="ribbon" size={20} color="#B5620E" />
                   <Text style={styles.connectedBadgeText}>
                     Mutual Match (Connected) / परस्पर मिलान (संपर्क करें)
                   </Text>
@@ -408,7 +408,7 @@ export default function ProfileDetailScreen() {
         {/* Premium Notice (if free) */}
         {!isPremium && (
           <View style={styles.premiumPromoCard}>
-            <Ionicons name="star" size={28} color="#E8B84B" style={{ marginBottom: 8 }} />
+            <Ionicons name="star" size={28} color="#B5620E" style={{ marginBottom: 8 }} />
             <Text style={styles.promoHeader}>Premium Features Locked / प्रीमियम फीचर्स लॉक हैं</Text>
             <Text style={styles.promoDesc}>
               Upgrade to see contact details, full family backgrounds, and astrological Kundli matching scores.
@@ -429,7 +429,7 @@ export default function ProfileDetailScreen() {
               {currentLang === 'hi' ? 'कुण्डली मिलान (अष्टकूट गुण मिलान)' : 'Kundli Compatibility (Ashtakoot)'}
             </Text>
             {loadingKundli ? (
-              <ActivityIndicator size="small" color="#E8B84B" style={{ margin: 16 }} />
+              <ActivityIndicator size="small" color="#B5620E" style={{ margin: 16 }} />
             ) : kundli ? (
               <View style={styles.kundliCard}>
                 <View style={styles.kundliHeader}>
@@ -452,7 +452,7 @@ export default function ProfileDetailScreen() {
 
                 {kundli.is_approximate && (
                   <View style={styles.approxNotice}>
-                    <Ionicons name="information-circle" size={16} color="#E8B84B" />
+                    <Ionicons name="information-circle" size={16} color="#B5620E" />
                     <Text style={styles.approxNoticeText}>
                       Approximate match (Incomplete birth details) {'\n'} अनुमानित मिलान (अपूर्ण जन्म विवरण)
                     </Text>
@@ -797,17 +797,17 @@ export default function ProfileDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
   errorText: {
-    color: '#FF6F61',
+    color: '#C0392B',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -815,9 +815,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1A0800',
+    backgroundColor: '#FDFAF5',
     borderBottomWidth: 1,
-    borderBottomColor: '#3D281C',
+    borderBottomColor: '#E8E0D0',
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 44 : 12,
     paddingBottom: 12,
@@ -826,10 +826,10 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 18,
     fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   shortlistBtn: {
     padding: 4,
@@ -842,11 +842,11 @@ const styles = StyleSheet.create({
   },
   photoContainer: {
     height: 320,
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     width: '100%',
     position: 'relative',
     borderBottomWidth: 1,
-    borderBottomColor: '#3D281C',
+    borderBottomColor: '#E8E0D0',
   },
   photo: {
     width: '100%',
@@ -864,34 +864,34 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   lockText: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 8,
   },
   lockSubtext: {
-    color: '#D4BFA0',
+    color: '#3D2E1A',
     fontSize: 13,
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 18,
   },
   upgradeBtnSmall: {
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
     borderRadius: 6,
     paddingHorizontal: 20,
     paddingVertical: 8,
     marginTop: 16,
   },
   upgradeBtnText: {
-    color: '#1A0800',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 13,
   },
   introCard: {
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#3D281C',
+    borderBottomColor: '#E8E0D0',
     padding: 20,
   },
   nameRow: {
@@ -899,28 +899,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   profileIdText: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 22,
     fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
     marginLeft: 12,
   },
   verifiedText: {
-    color: '#1A0800',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: 'bold',
     marginLeft: 2,
   },
   quickInfo: {
-    color: '#D4BFA0',
+    color: '#3D2E1A',
     fontSize: 16,
     marginTop: 6,
   },
@@ -933,19 +933,19 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#3D281C',
+    borderBottomColor: '#E8E0D0',
   },
   primaryActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
     borderRadius: 8,
     paddingVertical: 12,
     width: '100%',
   },
   primaryActionBtnText: {
-    color: '#1A0800',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 15,
     marginLeft: 8,
@@ -954,7 +954,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: '#FF6F61',
+    borderColor: '#C0392B',
     borderWidth: 1.5,
     borderRadius: 8,
     paddingVertical: 12,
@@ -979,13 +979,13 @@ const styles = StyleSheet.create({
     flex: 0.47,
   },
   declineButton: {
-    backgroundColor: '#FF6F61',
+    backgroundColor: '#C0392B',
   },
   acceptButton: {
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
   },
   respondButtonText: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontWeight: 'bold',
     fontSize: 14,
     marginLeft: 4,
@@ -995,20 +995,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(232, 184, 75, 0.15)',
     borderWidth: 1,
-    borderColor: '#E8B84B',
+    borderColor: '#B5620E',
     borderRadius: 8,
     padding: 12,
     width: '100%',
     justifyContent: 'center',
   },
   connectedBadgeText: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontWeight: 'bold',
     fontSize: 13,
     marginLeft: 6,
   },
   declinedBadge: {
-    backgroundColor: '#3D281C',
+    backgroundColor: '#E8E0D0',
     borderRadius: 8,
     padding: 12,
     width: '100%',
@@ -1019,29 +1019,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   premiumPromoCard: {
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E8B84B',
+    borderColor: '#B5620E',
     borderRadius: 12,
     margin: 16,
     padding: 20,
     alignItems: 'center',
   },
   promoHeader: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 6,
   },
   promoDesc: {
-    color: '#D4BFA0',
+    color: '#3D2E1A',
     fontSize: 13,
     textAlign: 'center',
     lineHeight: 18,
     marginBottom: 16,
   },
   upgradeBtnLarge: {
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -1049,7 +1049,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   upgradeBtnLargeText: {
-    color: '#1A0800',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 14,
   },
@@ -1058,19 +1058,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   sectionTitle: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 15,
     fontWeight: 'bold',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 12,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   detailsList: {
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
     padding: 16,
   },
   detailRow: {
@@ -1078,21 +1078,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#3D281C',
+    borderBottomColor: '#E8E0D0',
   },
   detailLabel: {
     color: '#8A7A60',
     fontSize: 13,
   },
   detailValue: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 14,
     fontWeight: '600',
   },
   aboutContainer: {
     marginBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#3D281C',
+    borderBottomColor: '#E8E0D0',
     paddingBottom: 16,
   },
   aboutHeader: {
@@ -1102,15 +1102,15 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   aboutText: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 14,
     lineHeight: 20,
   },
   kundliCard: {
-    backgroundColor: '#2C1A10',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#E8B84B',
+    borderColor: '#B5620E',
     padding: 16,
   },
   kundliHeader: {
@@ -1118,15 +1118,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#3D281C',
+    borderBottomColor: '#E8E0D0',
     paddingBottom: 12,
     marginBottom: 12,
   },
   kundliScoreText: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 22,
     fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   kundliLabelBadge: {
     borderRadius: 4,
@@ -1134,16 +1134,16 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   labelUttam: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#1A7A45',
   },
   labelMadhyam: {
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
   },
   labelVichar: {
-    backgroundColor: '#FF6F61',
+    backgroundColor: '#C0392B',
   },
   kundliLabelBadgeText: {
-    color: '#1A0800',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 12,
   },
@@ -1156,7 +1156,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   approxNoticeText: {
-    color: '#E8B84B',
+    color: '#B5620E',
     fontSize: 11,
     marginLeft: 6,
     lineHeight: 14,
@@ -1171,18 +1171,18 @@ const styles = StyleSheet.create({
   },
   gridCol: {
     flex: 0.48,
-    backgroundColor: '#1C0D05',
+    backgroundColor: '#FDFAF5',
     borderRadius: 6,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
   },
   gridLabel: {
     color: '#8A7A60',
     fontSize: 11,
   },
   gridVal: {
-    color: '#FFFFFF',
+    color: '#3D2E1A',
     fontSize: 13,
     fontWeight: 'bold',
     marginTop: 2,

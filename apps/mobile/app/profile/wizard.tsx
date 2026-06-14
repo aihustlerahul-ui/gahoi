@@ -704,7 +704,7 @@ export default function ProfileWizardScreen() {
         disabled={submitting}
       >
         {submitting ? (
-          <ActivityIndicator color="#1A0800" />
+          <ActivityIndicator color="#FFFFFF" />
         ) : (
           <Text style={styles.nextText}>
             {step === 5 ? 'Complete / पूर्ण करें' : 'Next / आगे बढ़ें'}
@@ -717,7 +717,7 @@ export default function ProfileWizardScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E8B84B" />
+        <ActivityIndicator size="large" color="#B5620E" />
         <Text style={styles.loadingText}>Loading configurations... / सेटअप लोड हो रहा है...</Text>
       </View>
     );
@@ -1085,7 +1085,7 @@ export default function ProfileWizardScreen() {
 
               <View style={[styles.row, { alignItems: 'center', justifyContent: 'space-between', marginVertical: 12 }]}>
                 <Text style={styles.labelInline}>Has Car / कार है</Text>
-                <Switch value={hasCar} onValueChange={setHasCar} trackColor={{ false: '#2C1A10', true: '#E8B84B' }} thumbColor={hasCar ? '#1A0800' : '#8A7A60'} />
+                <Switch value={hasCar} onValueChange={setHasCar} trackColor={{ false: '#FFFFFF', true: '#B5620E' }} thumbColor={hasCar ? '#FFFFFF' : '#8A7A60'} />
               </View>
 
               <Text style={styles.label}>Present Address / वर्तमान पता</Text>
@@ -1148,14 +1148,14 @@ export default function ProfileWizardScreen() {
                 <View style={{ flex: 1, marginRight: 12 }}>
                   <Text style={styles.labelInline}>Exclude Same Gotra / समान गोत्र निषेध</Text>
                 </View>
-                <Switch value={excludeSameGotra} onValueChange={setExcludeSameGotra} trackColor={{ false: '#2C1A10', true: '#E8B84B' }} thumbColor={excludeSameGotra ? '#1A0800' : '#8A7A60'} />
+                <Switch value={excludeSameGotra} onValueChange={setExcludeSameGotra} trackColor={{ false: '#FFFFFF', true: '#B5620E' }} thumbColor={excludeSameGotra ? '#FFFFFF' : '#8A7A60'} />
               </View>
 
               <View style={[styles.row, { alignItems: 'center', justifyContent: 'space-between', marginVertical: 16 }]}>
                 <View style={{ flex: 1, marginRight: 12 }}>
                   <Text style={styles.labelInline}>I accept the terms & privacy policy / मैं नियम स्वीकार करता/करती हूँ</Text>
                 </View>
-                <Switch value={termsAccepted} onValueChange={setTermsAccepted} trackColor={{ false: '#2C1A10', true: '#E8B84B' }} thumbColor={termsAccepted ? '#1A0800' : '#8A7A60'} />
+                <Switch value={termsAccepted} onValueChange={setTermsAccepted} trackColor={{ false: '#FFFFFF', true: '#B5620E' }} thumbColor={termsAccepted ? '#FFFFFF' : '#8A7A60'} />
               </View>
 
               {renderNavButtons(handleSaveStep5, 4)}
@@ -1168,24 +1168,24 @@ export default function ProfileWizardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1A0800' },
-  loadingContainer: { flex: 1, backgroundColor: '#1A0800', alignItems: 'center', justifyContent: 'center' },
-  loadingText: { color: '#D4BFA0', marginTop: 16, fontSize: 15 },
-  progressBar: { flexDirection: 'row', height: 4, backgroundColor: '#2C1A10', width: '100%' },
+  container: { flex: 1, backgroundColor: '#FDFAF5' },
+  loadingContainer: { flex: 1, backgroundColor: '#FDFAF5', alignItems: 'center', justifyContent: 'center' },
+  loadingText: { color: '#3D2E1A', marginTop: 16, fontSize: 15 },
+  progressBar: { flexDirection: 'row', height: 4, backgroundColor: '#FFFFFF', width: '100%' },
   progressSegment: { flex: 1, height: '100%' },
-  progressActive: { backgroundColor: '#E8B84B' },
-  progressInactive: { backgroundColor: '#2C1A10' },
+  progressActive: { backgroundColor: '#B5620E' },
+  progressInactive: { backgroundColor: '#FFFFFF' },
   scrollContainer: { flexGrow: 1, padding: 24, paddingBottom: 48 },
-  stepTitle: { color: '#E8B84B', fontSize: 14, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase' },
-  sectionHeader: { color: '#FFFFFF', fontSize: 22, fontWeight: '800', marginBottom: 24 },
-  label: { color: '#D4BFA0', fontSize: 14, fontWeight: '600', marginTop: 16, marginBottom: 8 },
-  labelInline: { color: '#D4BFA0', fontSize: 15, fontWeight: '600' },
+  stepTitle: { color: '#B5620E', fontSize: 14, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase' },
+  sectionHeader: { color: '#3D2E1A', fontSize: 22, fontWeight: '800', marginBottom: 24 },
+  label: { color: '#3D2E1A', fontSize: 14, fontWeight: '600', marginTop: 16, marginBottom: 8 },
+  labelInline: { color: '#3D2E1A', fontSize: 15, fontWeight: '600' },
   hint: { color: '#8A7A60', fontSize: 12, marginBottom: 8, marginTop: -4 },
   input: {
-    backgroundColor: '#2C1A10',
-    color: '#FFFFFF',
+    backgroundColor: '#FFFFFF',
+    color: '#3D2E1A',
     borderWidth: 1,
-    borderColor: '#3D281C',
+    borderColor: '#E8E0D0',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -1197,8 +1197,8 @@ const styles = StyleSheet.create({
   aaknaPickerScroll: { maxHeight: 160, marginBottom: 8 },
   smallRadio: {
     borderWidth: 1,
-    borderColor: '#3D281C',
-    backgroundColor: '#2C1A10',
+    borderColor: '#E8E0D0',
+    backgroundColor: '#FFFFFF',
     borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -1206,11 +1206,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     margin: 4,
   },
-  radioSelected: { borderColor: '#E8B84B', backgroundColor: '#FFF9F0' },
-  radioText: { color: '#D4BFA0', fontWeight: '600', fontSize: 14 },
-  radioTextSelected: { color: '#1A0800', fontWeight: '700', fontSize: 14 },
+  radioSelected: { borderColor: '#B5620E', backgroundColor: '#B5620E' },
+  radioText: { color: '#3D2E1A', fontWeight: '500', fontSize: 13 },
+  radioTextSelected: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
   nextButton: {
-    backgroundColor: '#E8B84B',
+    backgroundColor: '#B5620E',
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
@@ -1218,7 +1218,7 @@ const styles = StyleSheet.create({
     marginTop: 32,
     marginBottom: 20,
   },
-  nextText: { color: '#1A0800', fontSize: 16, fontWeight: '700' },
+  nextText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
   backStepButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
@@ -1231,5 +1231,5 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   backStepText: { color: '#8A7A60', fontSize: 16, fontWeight: '700' },
-  errorText: { color: '#FF6F61', fontSize: 14, marginVertical: 12, fontWeight: '500' },
+  errorText: { color: '#C0392B', fontSize: 14, marginVertical: 12, fontWeight: '500' },
 });

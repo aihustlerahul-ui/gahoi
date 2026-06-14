@@ -1,76 +1,76 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
+import { Icon, IconName } from '../../src/components/ui';
+import { colors } from '../../src/theme';
 
+/** Spec §2.1 — five primary destinations; Interests is a centre elevated FAB. */
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: '#1A0800',
-          borderBottomWidth: 1,
-          borderBottomColor: '#3D281C',
-        },
-        headerTitleStyle: {
-          color: '#E8B84B',
-          fontWeight: 'bold',
-          fontSize: 18,
-          fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-        },
+        headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#1A0800',
-          borderTopWidth: 1,
-          borderTopColor: '#3D281C',
-          height: Platform.OS === 'ios' ? 88 : 60,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 8,
+          backgroundColor: colors.white,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: colors.borderWarm,
+          height: Platform.OS === 'ios' ? 88 : 64,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 10,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: '#E8B84B',
-        tabBarInactiveTintColor: '#8A7A60',
+        tabBarActiveTintColor: colors.sacredGold,
+        tabBarInactiveTintColor: colors.midBrown,
+        tabBarLabelStyle: { fontSize: 10 },
       }}
     >
       <Tabs.Screen
         name="index"
-        options={{
-          title: 'Matches',
-          tabBarLabel: 'Matches / मिलान',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people" size={size} color={color} />
-          ),
-        }}
+        options={{ title: 'Home', tabBarIcon: ({ color }) => <Icon name="home" size={22} color={color} /> }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{ title: 'Search', tabBarIcon: ({ color }) => <Icon name="search" size={22} color={color} /> }}
       />
       <Tabs.Screen
         name="interests"
         options={{
-          title: 'Interests',
-          tabBarLabel: 'Interests / रुचियां',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart" size={size} color={color} />
+          title: '',
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.fab}>
+              <Icon name="heart" size={24} color={colors.onGold} />
+            </View>
           ),
         }}
       />
       <Tabs.Screen
-        name="shortlist"
-        options={{
-          title: 'Shortlist',
-          tabBarLabel: 'Shortlist / सूची',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="bookmark" size={size} color={color} />
-          ),
-        }}
+        name="alerts"
+        options={{ title: 'Alerts', tabBarIcon: ({ color }) => <Icon name="bell" size={22} color={color} /> }}
       />
       <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarLabel: 'Settings / सेटिंग्स',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" size={size} color={color} />
-          ),
-        }}
+        name="profile"
+        options={{ title: 'Profile', tabBarIcon: ({ color }) => <Icon name="user" size={22} color={color} /> }}
       />
+
+      {/* Reachable via drawer / links, not shown as tabs */}
+      <Tabs.Screen name="shortlist" options={{ href: null, title: 'Shortlist' }} />
+      <Tabs.Screen name="settings" options={{ href: null, title: 'Settings' }} />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  fab: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.sacredGold,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Platform.OS === 'ios' ? 24 : 28,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+});
