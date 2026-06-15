@@ -50,11 +50,8 @@ function NavigationRoot() {
           router.replace('/profile/wizard');
         }
       } else {
-        // Profile exists and onboarding is complete, redirect to main tabs if not in allowed post-auth routes
-        if (!inTabsGroup && segments[0] !== 'profile' && segments[0] !== 'payment') {
-          router.replace('/(tabs)');
-        } else if (segments[0] === 'profile' && segments[1] === 'wizard') {
-          // If onboarding is complete but user is still on wizard screen, redirect to main tabs
+        // Profile exists and onboarding is complete — allow profile/wizard (edit mode) and payment
+        if (!inTabsGroup && segments[0] !== 'profile' && segments[0] !== 'payment' && segments[0] !== 'drawer') {
           router.replace('/(tabs)');
         }
       }

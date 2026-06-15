@@ -33,7 +33,8 @@
           "color": "#E8B84B",
           "sounds": []
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

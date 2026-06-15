@@ -29,7 +29,8 @@ export default function LoginScreen() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [honeypot, setHoneypot] = useState(''); // spec §4.2 — must stay empty
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
-  const [step, setStep] = useState<'email' | 'otp'>('email');
+  const [step, setStep] = useState<'welcome' | 'email' | 'otp'>('welcome');
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
@@ -50,7 +51,7 @@ export default function LoginScreen() {
       setError('Please enter a valid email / कृपया सही ईमेल दर्ज करें');
       return;
     }
-    if (!acceptedTerms) {
+    if (mode === 'signup' && !acceptedTerms) {
       setError('Please accept the Terms & Privacy Policy / कृपया नियम स्वीकार करें');
       return;
     }
@@ -138,9 +139,46 @@ export default function LoginScreen() {
           </View>
 
           <Card style={styles.card}>
-            {step === 'email' ? (
+            {step === 'welcome' ? (
               <View>
-                <Text style={styles.cardTitle}>Create Account / खाता बनाएं</Text>
+                <Text style={styles.welcomeTitle}>Welcome / स्वागत है</Text>
+                <Text style={styles.welcomeSub}>Gahoi Bania community matrimony{'\n'}गहोई बनिया समुदाय का विवाह मंच</Text>
+
+                <Button
+                  label="Login / लॉगिन"
+                  onPress={() => { setMode('login'); setStep('email'); setError(null); }}
+                  style={{ marginTop: spacing.xl }}
+                />
+
+                <TouchableOpacity
+                  style={styles.signupBtn}
+                  onPress={() => { setMode('signup'); setStep('email'); setError(null); }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.signupBtnText}>Create Account / खाता बनाएं</Text>
+                </TouchableOpacity>
+
+                <View style={styles.divider}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>or</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                <TouchableOpacity style={styles.googleBtn} activeOpacity={0.8} disabled>
+                  <Icon name="user" size={18} color={colors.darkBrown} />
+                  <Text style={styles.googleText}>Continue with Google</Text>
+                </TouchableOpacity>
+              </View>
+            ) : step === 'email' ? (
+              <View>
+                <TouchableOpacity onPress={() => { setStep('welcome'); setError(null); }} style={styles.backRow}>
+                  <Icon name="chevron" size={16} color={colors.midBrown} />
+                  <Text style={styles.backText}>Back</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.cardTitle}>
+                  {mode === 'signup' ? 'Create Account / खाता बनाएं' : 'Login / लॉगिन'}
+                </Text>
 
                 <Text style={styles.label}>Email Address / ईमेल पता</Text>
                 <TextInput
@@ -157,21 +195,35 @@ export default function LoginScreen() {
                   }}
                 />
 
-                <Text style={styles.label}>Profile Created By / प्रोफ़ाइल किसने बनाई</Text>
-                <View style={styles.chipRow}>
-                  {PROFILE_CREATED_BY_OPTIONS.map((opt) => {
-                    const active = createdBy === opt;
-                    return (
-                      <TouchableOpacity
-                        key={opt}
-                        style={[styles.chip, active && styles.chipActive]}
-                        onPress={() => setCreatedBy(opt)}
-                      >
-                        <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+                {mode === 'signup' && (
+                  <>
+                    <Text style={styles.label}>Profile Created By / प्रोफ़ाइल किसने बनाई</Text>
+                    <View style={styles.chipRow}>
+                      {PROFILE_CREATED_BY_OPTIONS.map((opt) => {
+                        const active = createdBy === opt;
+                        return (
+                          <TouchableOpacity
+                            key={opt}
+                            style={[styles.chip, active && styles.chipActive]}
+                            onPress={() => setCreatedBy(opt)}
+                          >
+                            <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    <TouchableOpacity style={styles.termsRow} onPress={() => setAcceptedTerms((v) => !v)} activeOpacity={0.7}>
+                      <View style={[styles.checkbox, acceptedTerms && styles.checkboxOn]}>
+                        {acceptedTerms && <Icon name="check" size={14} color={colors.onGold} />}
+                      </View>
+                      <Text style={styles.termsText}>
+                        I accept the <Text style={styles.link}>Terms of Service</Text> and{' '}
+                        <Text style={styles.link}>Privacy Policy</Text>
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
 
                 {/* Honeypot — visually hidden, never focusable by humans */}
                 <TextInput
@@ -183,30 +235,9 @@ export default function LoginScreen() {
                   importantForAccessibility="no"
                 />
 
-                <TouchableOpacity style={styles.termsRow} onPress={() => setAcceptedTerms((v) => !v)} activeOpacity={0.7}>
-                  <View style={[styles.checkbox, acceptedTerms && styles.checkboxOn]}>
-                    {acceptedTerms && <Icon name="check" size={14} color={colors.onGold} />}
-                  </View>
-                  <Text style={styles.termsText}>
-                    I accept the <Text style={styles.link}>Terms of Service</Text> and{' '}
-                    <Text style={styles.link}>Privacy Policy</Text>
-                  </Text>
-                </TouchableOpacity>
-
                 {error && <Text style={styles.errorText}>{error}</Text>}
 
-                <Button label="Send OTP / ओटीपी भेजें" onPress={handleSendOtp} loading={loading} style={{ marginTop: spacing.sm }} />
-
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>or</Text>
-                  <View style={styles.dividerLine} />
-                </View>
-
-                <TouchableOpacity style={styles.googleBtn} activeOpacity={0.8} disabled>
-                  <Icon name="user" size={18} color={colors.darkBrown} />
-                  <Text style={styles.googleText}>Continue with Google</Text>
-                </TouchableOpacity>
+                <Button label="Send OTP / ओटीपी भेजें" onPress={handleSendOtp} loading={loading} style={{ marginTop: spacing.md }} />
               </View>
             ) : (
               <View>
@@ -274,6 +305,19 @@ const styles = StyleSheet.create({
   logoTitle: { fontSize: 28, fontWeight: '600', color: colors.sacredGold, letterSpacing: 0.5 },
   logoHindi: { fontSize: 18, color: colors.deepGold, marginTop: spacing.xs },
   card: { padding: spacing.xl },
+  welcomeTitle: { fontSize: 18, fontWeight: '600', color: colors.darkBrown, textAlign: 'center', marginBottom: spacing.sm },
+  welcomeSub: { fontSize: 12, color: colors.midBrown, textAlign: 'center', lineHeight: 18, marginBottom: spacing.sm },
+  signupBtn: {
+    marginTop: spacing.md,
+    borderWidth: 1.5,
+    borderColor: colors.sacredGold,
+    borderRadius: radius.button,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  signupBtnText: { color: colors.sacredGold, fontWeight: '600', fontSize: 14 },
+  backRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md, gap: spacing.xs },
+  backText: { fontSize: 13, color: colors.midBrown },
   cardTitle: { fontSize: 16, fontWeight: '500', color: colors.darkBrown, marginBottom: spacing.lg },
   subtitle: { ...typography.secondary, marginBottom: spacing.lg },
   label: { fontSize: 12, fontWeight: '500', color: colors.midBrown, marginBottom: spacing.sm, marginTop: spacing.md },

@@ -34,6 +34,71 @@ const CATEGORY_PILLS = [
   { key: 'business', label: 'Business' },
 ];
 
+function getMissingItems(p: any): string[] {
+  const missing: string[] = [];
+  if (!p?.firstName || !p?.lastName) missing.push('Full name');
+  if (!p?.aboutMe) missing.push('About me');
+  if (!p?.gallery?.length) missing.push('Photos');
+  if (!p?.education?.highestDegree) missing.push('Education');
+  if (!p?.occupation?.type) missing.push('Occupation');
+  if (!p?.family?.fatherName) missing.push('Family details');
+  return missing;
+}
+
+function ProfileCompletionBanner({ userProfile, onPress }: { userProfile: any; onPress: () => void }) {
+  const pct: number = userProfile?.profileCompletenessPct ?? 0;
+  if (pct >= 100) return null;
+  const missing = getMissingItems(userProfile);
+  return (
+    <TouchableOpacity style={bannerStyles.wrap} onPress={onPress} activeOpacity={0.85}>
+      <View style={bannerStyles.topRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={bannerStyles.title}>Complete your profile / प्रोफ़ाइल पूरा करें</Text>
+          <Text style={bannerStyles.sub}>
+            {missing.length > 0 ? `Missing: ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? ` +${missing.length - 3} more` : ''}` : 'Almost there!'}
+          </Text>
+        </View>
+        <View style={bannerStyles.pctCircle}>
+          <Text style={bannerStyles.pctText}>{pct}%</Text>
+        </View>
+      </View>
+      <View style={bannerStyles.track}>
+        <View style={[bannerStyles.fill, { width: `${pct}%` as any }]} />
+      </View>
+      <Text style={bannerStyles.cta}>Tap to complete →</Text>
+    </TouchableOpacity>
+  );
+}
+
+const bannerStyles = StyleSheet.create({
+  wrap: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.lightGold,
+    borderWidth: 1,
+    borderColor: colors.goldAccent,
+    borderRadius: radius.card,
+    padding: spacing.lg,
+  },
+  topRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
+  title: { fontSize: 13, fontWeight: '600', color: colors.darkBrown },
+  sub: { fontSize: 11, color: colors.midBrown, marginTop: 2 },
+  pctCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.sacredGold,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: spacing.md,
+  },
+  pctText: { color: colors.onGold, fontSize: 13, fontWeight: '700' },
+  track: { height: 6, backgroundColor: colors.borderWarm, borderRadius: 3, overflow: 'hidden' },
+  fill: { height: 6, backgroundColor: colors.sacredGold, borderRadius: 3 },
+  cta: { fontSize: 11, color: colors.sacredGold, fontWeight: '500', marginTop: spacing.sm, textAlign: 'right' },
+});
+
 export default function MatchesScreen() {
   const router = useRouter();
   const { userProfile } = useAuth();
@@ -187,6 +252,9 @@ export default function MatchesScreen() {
         contentContainerStyle={{ paddingBottom: spacing.xl }}
         ListHeaderComponent={
           <View>
+            {/* Profile completion banner */}
+            <ProfileCompletionBanner userProfile={userProfile} onPress={() => router.push('/(tabs)/profile' as any)} />
+
             {/* Category pills — spec §7.2 */}
             <FlatList
               horizontal

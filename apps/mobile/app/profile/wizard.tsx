@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Switch,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -39,6 +40,7 @@ import {
   time24StringTo12,
   resolveHeightFtIn,
 } from '@gahoisarthi/shared';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/lib/auth';
 import { apiRequest } from '../../src/lib/api';
 import { OptionPicker } from '../../src/components/profile/OptionPicker';
@@ -76,7 +78,8 @@ type CityOption = { id: number; name: string; state: { id: number; name: string;
 const BIRTH_HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 export default function ProfileWizardScreen() {
-  const { userProfile, refreshProfile } = useAuth();
+  const router = useRouter();
+  const { userProfile, refreshProfile, logoutUser } = useAuth();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -488,29 +491,35 @@ export default function ProfileWizardScreen() {
     );
   };
 
+  const showValidationError = (msg: string) => {
+    setError(msg);
+    // Alert is a fallback for native; web uses inline error shown in nav row
+    if (typeof window === 'undefined') Alert.alert('Required / आवश्यक', msg);
+  };
+
   const handleSaveStep1 = async () => {
     if (!firstName.trim() || !lastName.trim()) {
-      setError('First and last name are required / नाम आवश्यक है');
+      showValidationError('First and last name are required / नाम आवश्यक है');
       return;
     }
     if (!gotraId) {
-      setError('Gotra is required / गोत्र आवश्यक है');
+      showValidationError('Gotra is required / गोत्र आवश्यक है');
       return;
     }
     if (aaknasForGotra.length > 0 && !aaknaId) {
-      setError('Aakna is required / आकना आवश्यक है');
+      showValidationError('Aakna is required / आकना आवश्यक है');
       return;
     }
     if (!mobile || mobile.length < 10) {
-      setError('Mobile is required / मोबाइल नंबर आवश्यक है');
+      showValidationError('Mobile number required (10 digits) / मोबाइल नंबर आवश्यक है');
       return;
     }
     if (!livingCityId) {
-      setError('Living city is required / वर्तमान शहर आवश्यक है');
+      showValidationError('Current city is required / वर्तमान शहर आवश्यक है');
       return;
     }
     if (!birthCityId) {
-      setError('Birth city is required / जन्म शहर आवश्यक है');
+      showValidationError('Birth city is required / जन्म शहर आवश्यक है');
       return;
     }
 
@@ -611,7 +620,7 @@ export default function ProfileWizardScreen() {
 
   const handleSaveStep4 = async () => {
     if (!fatherName.trim()) {
-      setError("Father's name is required / पिता का नाम आवश्यक है");
+      showValidationError("Father's name is required / पिता का नाम आवश्यक है");
       return;
     }
     setSubmitting(true);
@@ -657,7 +666,7 @@ export default function ProfileWizardScreen() {
 
   const handleSaveStep5 = async () => {
     if (!termsAccepted) {
-      setError('Please accept the terms to continue / जारी रखने के लिए नियम स्वीकार करें');
+      showValidationError('Please accept the terms to continue / जारी रखने के लिए नियम स्वीकार करें');
       return;
     }
     setSubmitting(true);
@@ -682,8 +691,12 @@ export default function ProfileWizardScreen() {
           termsAccepted: true,
         }),
       });
-      if (res.success) await refreshProfile();
-      else setError(res.error || 'Failed to save preferences');
+      if (res.success) {
+        await refreshProfile();
+        router.replace('/(tabs)');
+      } else {
+        setError(res.error || 'Failed to save preferences');
+      }
     } catch (err: any) {
       setError(err.message || 'Network error');
     } finally {
@@ -692,25 +705,32 @@ export default function ProfileWizardScreen() {
   };
 
   const renderNavButtons = (onNext: () => void, backStep?: number) => (
-    <View style={styles.row}>
-      {backStep != null && (
-        <TouchableOpacity style={[styles.backStepButton, { flex: 1, marginRight: 8 }]} onPress={() => setStep(backStep)}>
-          <Text style={styles.backStepText}>Back / पीछे</Text>
-        </TouchableOpacity>
-      )}
-      <TouchableOpacity
-        style={[styles.nextButton, { flex: backStep != null ? 2 : 1 }]}
-        onPress={onNext}
-        disabled={submitting}
-      >
-        {submitting ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <Text style={styles.nextText}>
-            {step === 5 ? 'Complete / पूर्ण करें' : 'Next / आगे बढ़ें'}
-          </Text>
+    <View>
+      {error ? (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>⚠ {error}</Text>
+        </View>
+      ) : null}
+      <View style={styles.row}>
+        {backStep != null && (
+          <TouchableOpacity style={[styles.backStepButton, { flex: 1, marginRight: 8 }]} onPress={() => { setStep(backStep); setError(null); }}>
+            <Text style={styles.backStepText}>Back / पीछे</Text>
+          </TouchableOpacity>
         )}
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.nextButton, { flex: backStep != null ? 2 : 1 }]}
+          onPress={onNext}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.nextText}>
+              {step === 5 ? 'Complete / पूर्ण करें' : 'Next / आगे बढ़ें'}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -733,7 +753,12 @@ export default function ProfileWizardScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-          <Text style={styles.stepTitle}>Step {step} of 5 / चरण {step} (5 में से)</Text>
+          <View style={styles.stepRow}>
+            <Text style={styles.stepTitle}>Step {step} of 5 / चरण {step} (5 में से)</Text>
+            <TouchableOpacity onPress={() => logoutUser()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={styles.wrongAccount}>Wrong account?</Text>
+            </TouchableOpacity>
+          </View>
           {error && <Text style={styles.errorText}>{error}</Text>}
 
           {step === 1 && (
@@ -1176,7 +1201,9 @@ const styles = StyleSheet.create({
   progressActive: { backgroundColor: '#B5620E' },
   progressInactive: { backgroundColor: '#FFFFFF' },
   scrollContainer: { flexGrow: 1, padding: 24, paddingBottom: 48 },
-  stepTitle: { color: '#B5620E', fontSize: 14, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase' },
+  stepRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  stepTitle: { color: '#B5620E', fontSize: 14, fontWeight: '700', textTransform: 'uppercase' },
+  wrongAccount: { fontSize: 12, color: '#8A7A60', textDecorationLine: 'underline' },
   sectionHeader: { color: '#3D2E1A', fontSize: 22, fontWeight: '800', marginBottom: 24 },
   label: { color: '#3D2E1A', fontSize: 14, fontWeight: '600', marginTop: 16, marginBottom: 8 },
   labelInline: { color: '#3D2E1A', fontSize: 15, fontWeight: '600' },
@@ -1232,4 +1259,6 @@ const styles = StyleSheet.create({
   },
   backStepText: { color: '#8A7A60', fontSize: 16, fontWeight: '700' },
   errorText: { color: '#C0392B', fontSize: 14, marginVertical: 12, fontWeight: '500' },
+  errorBanner: { backgroundColor: '#FEF0F0', borderWidth: 1, borderColor: '#F0A0A0', borderRadius: 8, padding: 12, marginBottom: 8 },
+  errorBannerText: { color: '#C0392B', fontSize: 13, fontWeight: '500' },
 });

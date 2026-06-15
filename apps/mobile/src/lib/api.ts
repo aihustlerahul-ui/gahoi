@@ -122,20 +122,24 @@ export async function apiRequest(
       !path.includes('/auth/refresh') &&
       !path.includes('/auth/verify-otp')
     ) {
-      if (!isRefreshing) {
-        isRefreshing = true;
-        try {
-          const newAccessToken = await refreshTokens();
-          isRefreshing = false;
-          onRefreshed(newAccessToken);
-        } catch (err) {
-          isRefreshing = false;
-          throw err;
-        }
-      }
-
-      const retryToken = await new Promise<string>((resolve) => {
+      // Subscribe FIRST so onRefreshed() fires into an already-registered callback.
+      // Then start refresh only if no refresh is in flight.
+      const retryToken = await new Promise<string>((resolve, reject) => {
         subscribeTokenRefresh((token) => resolve(token));
+
+        if (!isRefreshing) {
+          isRefreshing = true;
+          refreshTokens()
+            .then((newToken) => {
+              isRefreshing = false;
+              onRefreshed(newToken);
+            })
+            .catch((err) => {
+              isRefreshing = false;
+              refreshSubscribers = [];
+              reject(err);
+            });
+        }
       });
 
       headers.set('Authorization', `Bearer ${retryToken}`);
